@@ -4,7 +4,7 @@ defmodule Redlock.Mixfile do
   def project do
     [
       app: :redlock,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.5",
       package: package(),
       start_permanent: Mix.env == :prod,
@@ -20,7 +20,7 @@ defmodule Redlock.Mixfile do
 
   defp deps do
     [
-      #{:ex_doc, "~> 0.15", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.15", only: :dev, runtime: false},
       {:redix, "~> 0.6.1"},
       {:poolboy, "~> 1.5"},
       {:secure_random, "~> 0.5.1"}
@@ -29,11 +29,11 @@ defmodule Redlock.Mixfile do
 
   defp package() do
     [
-      description: "Graceful shutdown support for Phoenix or plain Plug application",
+      description: "Redlock (Redis Distributed Lock) implementation",
       licenses: ["MIT"],
       links: %{
         "Github" => "https://github.com/lyokato/redlock",
-        #"Docs"   => "https://hexdocs.pm/redlock"
+        "Docs"   => "https://hexdocs.pm/redlock"
       },
       maintainers: ["Lyo Kato"]
     ]
