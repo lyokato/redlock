@@ -16,7 +16,7 @@ defmodule Redlock.Executor do
           :ok
 
         {:error, reason} ->
-          Logger.error "<Redlock> failed to execute redis-unlock-command: #{reason}"
+          Logger.error "<Redlock> failed to execute redis-unlock-command: #{inspect reason}"
           :error
 
       end
@@ -41,7 +41,7 @@ defmodule Redlock.Executor do
           true
 
         {:error, reason} ->
-          Logger.warn "<Redlock> failed to execute redis-lock-command: #{reason}"
+          Logger.warn "<Redlock> failed to execute redis-lock-command: #{inspect reason}"
           false
 
       end
@@ -51,6 +51,8 @@ defmodule Redlock.Executor do
 
     drift    = ttl * config.drift_factor + 0.002
     validity = ttl - ((Redlock.Util.now() - started_at) / 1000.0) - drift
+
+    Logger.debug "<Redlock> success-#{number_of_success} : quorum-#{config.quorum}"
 
     if number_of_success >= config.quorum and validity > 0 do
 

@@ -76,7 +76,8 @@ defmodule Redlock.TopSupervisor do
                         port:                  port,
                         pool_name:             pool_name,
                         reconnection_interval: interval,
-                        pool_size:             pool_size]])}
+                        pool_size:             pool_size]],
+                      [id: name])}
   end
 
 end

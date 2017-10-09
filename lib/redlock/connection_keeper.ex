@@ -29,13 +29,15 @@ defmodule Redlock.ConnectionKeeper do
 
   def handle_info(:connect, %{host: host, port: port}=state) do
 
-    case Redix.start_link([host: host, port: port]) do
+    case Redix.start_link([host: host, port: port],
+                          [sync_connect: true, exit_on_disconnection: true]) do
 
       {:ok, pid} ->
+        Logger.debug "<Redlock.ConnectionKeeper:#{host}:#{port}> connected to Redis"
         install_script(pid, state)
 
       other ->
-        Logger.error "<#{__MODULE__}> failed to start Redix<#{host}:#{port}>: #{other}"
+        Logger.error "<Redlock.ConnectionKeeper:#{host}:#{port}> failed to connect, try to re-connect after interval: #{inspect other}"
         Process.send_after(self(), :connect, state.reconnection_interval)
         {:noreply, %{state| redix: nil}}
 
@@ -44,8 +46,8 @@ defmodule Redlock.ConnectionKeeper do
   end
 
   def handle_info({:EXIT, pid, _reason}, %{host: host, port: port, redix: pid}=state) do
-    Logger.warn "<#{__MODULE__}> Redix<#{host}:#{port}> seems to be disconnected, try to re-connect"
-    send self(), :connect
+    Logger.error "<Redlock.ConnectionKeeper:#{host}:#{port}> seems to be disconnected, try to re-connect"
+    Process.send_after(self(), :connect, state.reconnection_interval)
     {:noreply, %{state| redix: nil}}
   end
 
@@ -82,9 +84,8 @@ defmodule Redlock.ConnectionKeeper do
         {:noreply, %{state| redix: pid}}
 
       other ->
-        Logger.warn "<#{__MODULE__}> Redix<#{host}:#{port}> failed to install script: #{inspect other}"
+        Logger.warn "<Redlock:ConnectionKeeper:#{host}:#{port}> failed to install script: #{inspect other}"
         Redix.stop(pid)
-        Process.send_after(self(), :connect, state.reconnection_interval)
         {:noreply, %{state| redix: nil}}
     end
   end
