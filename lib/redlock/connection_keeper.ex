@@ -53,10 +53,10 @@ defmodule Redlock.ConnectionKeeper do
     {:noreply, state}
   end
 
-  def handle_call(:get_connection, %{redix: nil}=state) do
+  def handle_call(:get_connection, _from, %{redix: nil}=state) do
     {:reply, {:error, :not_found}, state}
   end
-  def handle_call(:get_connection, %{redix: redix}=state) do
+  def handle_call(:get_connection, _from, %{redix: redix}=state) do
     {:reply, {:ok, redix}, state}
   end
 

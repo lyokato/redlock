@@ -91,7 +91,7 @@ defmodule Redlock.Executor do
 
     if number_of_success >= state.quorum and validity > 0 do
 
-      Logger.debug "<Redlock> create lock for #{resource} successfully"
+      Logger.debug "<Redlock> created lock for #{resource} successfully"
       {:ok, value}
 
     else

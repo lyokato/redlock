@@ -20,9 +20,8 @@ defmodule Redlock.TopSupervisor do
   end
 
   def init(opts) do
-    specs = children(opts)
-    Logger.info "Redlock #{inspect specs}"
-    supervise(specs, strategy: :one_for_one)
+    children(opts)
+    |> supervise(strategy: :one_for_one)
   end
 
   defp children(opts) do
