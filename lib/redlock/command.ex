@@ -1,5 +1,7 @@
 defmodule Redlock.Command do
 
+  require Logger
+
   @helper_script ~S"""
 if redis.call("get",KEYS[1]) == ARGV[1] then
   return redis.call("del",KEYS[1])
@@ -28,7 +30,16 @@ end
   end
 
   def lock(redix, resource, value, ttl) do
-    Redix.command(redix, ["SET", resource, value, "NX", "PX", ttl * 1000])
+    case Redix.command(redix, ["SET", resource, value, "NX", "PX", ttl * 1000]) do
+
+      {:ok, "OK"} -> :ok
+
+      {:ok, nil} -> {:error, :already_locked}
+
+      other ->
+        Logger.error "<Redlock> failed to execute redis SET: #{inspect other}"
+        {:error, :system_error}
+    end
   end
 
   def unlock(redix, resource, value) do

@@ -35,19 +35,19 @@ defmodule Redlock.TopSupervisor do
                         |> Enum.map(&(node_supervisor(&1, pool_size)))
                         |> Enum.unzip()
 
-    specs ++ [executor_worker(opts, pool_names)]
+    [config_worker(opts, pool_names)|specs]
 
   end
 
-  defp executor_worker(opts, servers) do
+  defp config_worker(opts, servers) do
     drift_factor = Keyword.get(opts, :drift_factor, @default_drift_factor)
     max_retry = Keyword.get(opts, :max_retry, @default_max_retry)
     interval = Keyword.get(opts, :retry_interval, @default_retry_interval)
 
-    worker(Redlock.Executor, [[servers:        servers,
-                               drift_factor:   drift_factor,
-                               max_retry:      max_retry,
-                               retry_interval: interval]])
+    worker(Redlock.Config, [[servers:        servers,
+                             drift_factor:   drift_factor,
+                             max_retry:      max_retry,
+                             retry_interval: interval]])
   end
 
   defp validate_server_setting(servers) when is_list(servers) do
