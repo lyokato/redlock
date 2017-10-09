@@ -23,6 +23,34 @@ defmodule Redlock do
 
       end
 
+  Or you can use `transaction` function
+
+      def my_function() do
+        # do something, and return {:ok, :my_result} or {:error, :my_error}
+      end
+
+      def execute_with_lock() do
+
+        resource = "example_key:#{user_id}"
+        lock_exp_sec = 10
+
+        case Redlock.transaction(resource, lock_exp_sec, &my_function/0) do
+
+          {:ok, :my_result} ->
+            Logger.info "this is the return-value of my_function/0"
+            :ok
+
+          {:error, :my_error} ->
+            Logger.info "this is the return-value of my_function/0"
+            :error
+
+          {:error, :lock_failure} ->
+            Logger.info "if locking has failed, Redlock returns this error"
+            :error
+
+        end
+      end
+
   ## Setup
 
       children = [
@@ -63,6 +91,22 @@ defmodule Redlock do
   def child_spec(opts) do
     import Supervisor.Spec
     supervisor(Redlock.TopSupervisor, [opts])
+  end
+
+  def transaction(resource, ttl, callback) do
+    case Redlock.Executor.lock(resource, ttl) do
+
+      {:ok, mutex} ->
+        try do
+          callback.()
+        after
+          Redlock.unlock(resource, mutex)
+        end
+
+      :error ->
+        {:error, :lock_failure}
+
+    end
   end
 
   def lock(resource, ttl) do
