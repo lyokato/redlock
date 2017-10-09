@@ -1,6 +1,7 @@
 defmodule Redlock.TopSupervisor do
 
   use Supervisor
+  require Logger
 
   # default Connection options
   @default_pool_size 2
@@ -19,8 +20,9 @@ defmodule Redlock.TopSupervisor do
   end
 
   def init(opts) do
-    children(opts)
-    |> supervise(strategy: :one_for_one)
+    specs = children(opts)
+    Logger.info "Redlock #{inspect specs}"
+    supervise(specs, strategy: :one_for_one)
   end
 
   defp children(opts) do
@@ -30,11 +32,11 @@ defmodule Redlock.TopSupervisor do
     servers = Keyword.fetch!(opts, :servers)
     validate_server_setting(servers)
 
-    {names, specs} = servers
-                     |> Enum.map(&(node_supervisor(&1, pool_size)))
-                     |> Enum.unzip()
+    {pool_names, specs} = servers
+                        |> Enum.map(&(node_supervisor(&1, pool_size)))
+                        |> Enum.unzip()
 
-    specs ++ [executor_worker(opts, names)]
+    specs ++ [executor_worker(opts, pool_names)]
 
   end
 
@@ -66,12 +68,14 @@ defmodule Redlock.TopSupervisor do
     port     = Keyword.get(opts, :port, @default_port)
     interval = Keyword.get(opts, :reconnection_interval, @default_reconnection_interval)
 
-    name = Module.concat(__MODULE__, "#{host}_#{port}")
+    name      = Module.concat(Redlock.NodeSupervisor, "#{host}_#{port}")
+    pool_name = Module.concat(Redlock.NodeConnectionPool, "#{host}_#{port}")
 
-    {name, supervisor(NodeSupervisor,
+    {pool_name, supervisor(NodeSupervisor,
                       [[name:                  name,
                         host:                  host,
                         port:                  port,
+                        pool_name:             pool_name,
                         reconnection_interval: interval,
                         pool_size:             pool_size]])}
   end

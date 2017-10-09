@@ -9,7 +9,7 @@ end
   """
 
   def helper_hash() do
-    :crypto.hash(:sha256, @helper_script) |> Base.encode16
+    :crypto.hash(:sha, @helper_script) |> Base.encode16 |> String.downcase
   end
 
   def install_script(redix) do

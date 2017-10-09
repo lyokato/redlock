@@ -1,6 +1,7 @@
 defmodule Redlock.NodeSupervisor do
 
   use Supervisor
+  require Logger
 
   def start_link(opts) do
     name = Keyword.fetch!(opts, :name)
@@ -9,10 +10,10 @@ defmodule Redlock.NodeSupervisor do
 
   def init(opts) do
 
-    name     = Keyword.fetch!(opts, :name)
+    name     = Keyword.fetch!(opts, :pool_name)
     host     = Keyword.fetch!(opts, :host)
     port     = Keyword.fetch!(opts, :port)
-    interval = Keyword.fetch!(opts, :retry_interval)
+    interval = Keyword.fetch!(opts, :reconnection_interval)
     size     = Keyword.fetch!(opts, :pool_size)
 
     children(name, host, port, interval, size)
@@ -23,9 +24,9 @@ defmodule Redlock.NodeSupervisor do
   defp children(name, host, port, interval, size) do
     [:poolboy.child_spec(name,
                          pool_opts(name, size),
-                         [host:           host,
-                          port:           port,
-                          retry_interval: interval])]
+                         [host:                  host,
+                          port:                  port,
+                          reconnection_interval: interval])]
   end
 
   defp pool_opts(name, size) do
