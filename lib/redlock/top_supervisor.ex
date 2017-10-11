@@ -28,37 +28,104 @@ defmodule Redlock.TopSupervisor do
 
     pool_size = Keyword.get(opts, :pool_size, @default_pool_size)
 
-    servers = Keyword.fetch!(opts, :servers)
-    validate_server_setting(servers)
+    servers = Keyword.get(opts, :servers, [])
+    cluster = Keyword.get(opts, :cluster, [])
 
-    {pool_names, specs} = servers
-                        |> Enum.map(&(node_supervisor(&1, pool_size)))
-                        |> Enum.unzip()
+    case choose_mode(servers, cluster) do
 
-    [config_worker(opts, pool_names)|specs]
+      :single ->
+        setup_single_node(opts, pool_size, servers)
+
+      :cluster ->
+        setup_cluster(opts, pool_size, cluster)
+
+    end
 
   end
 
-  defp config_worker(opts, servers) do
-    drift_factor = Keyword.get(opts, :drift_factor, @default_drift_factor)
-    max_retry = Keyword.get(opts, :max_retry, @default_max_retry)
-    interval = Keyword.get(opts, :retry_interval, @default_retry_interval)
+  defp setup_single_node(opts, pool_size, servers) do
 
-    worker(Redlock.Config, [[servers:        servers,
-                             drift_factor:   drift_factor,
+    {pool_names, specs} = gather_node_setting(pool_size, servers)
+
+    [
+      config_worker(opts),
+      node_chooser_worker(Redlock.NodeChooser.Store.SingleNode, [pool_names])
+    ] ++ specs
+  end
+
+  defp setup_cluster(opts, pool_size, cluster) do
+
+    node_settings = cluster
+                  |> Enum.map(&(gather_node_setting(pool_size, &1)))
+
+    specs = node_settings
+            |> Enum.map(fn {_, specs} -> specs end)
+            |> List.flatten()
+
+    pools_list = node_settings
+                |> Enum.map(fn {pools, _} -> pools end)
+
+    [
+      config_worker(opts),
+      node_chooser_worker(Redlock.NodeChooser.Store.HashRing, pools_list)
+    ] ++ specs
+  end
+
+  defp gather_node_setting(pool_size, servers) do
+    {pool_names, specs} = servers
+                        |> Enum.map(&(node_supervisor(&1, pool_size)))
+                        |> Enum.unzip()
+    {pool_names, specs}
+  end
+
+  defp node_chooser_worker(store_mod, pools_list) do
+    worker(Redlock.NodeChooser, [[store_mod: store_mod, pools_list: pools_list]])
+  end
+
+  defp config_worker(opts) do
+
+    drift_factor = Keyword.get(opts, :drift_factor, @default_drift_factor)
+    max_retry    = Keyword.get(opts, :max_retry, @default_max_retry)
+    interval     = Keyword.get(opts, :retry_interval, @default_retry_interval)
+
+    worker(Redlock.Config, [[drift_factor:   drift_factor,
                              max_retry:      max_retry,
                              retry_interval: interval]])
+  end
+
+  defp choose_mode(servers, cluster) when is_list(servers) and is_list(cluster) do
+    cond do
+
+      length(cluster) > 0 ->
+        cluster |> Enum.each(&validate_server_setting(&1))
+        :cluster
+
+      length(servers) > 0 ->
+        validate_server_setting(servers)
+        :single
+
+      true ->
+        raise_error("should set proper format of :servers or :cluster")
+
+    end
+  end
+  defp choose_mode(_servers, _cluster) do
+      raise_error("should set proper format of :servers or :cluster")
   end
 
   defp validate_server_setting(servers) when is_list(servers) do
     if rem(length(servers), 2) != 0 do
       :ok
     else
-      raise ":servers options should include odd number of host settings"
+      raise_error("should include odd number of host settings")
     end
   end
   defp validate_server_setting(_servers) do
-    raise ":servers option should be set and it also should be list"
+    raise_error("invalid format of server list")
+  end
+
+  defp raise_error(msg) do
+    raise "Redlock Configuration Exception: #{msg}"
   end
 
   defp node_supervisor(opts, pool_size) do

@@ -12,7 +12,7 @@ by adding `redlock` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:redlock, "~> 0.1.1"}
+    {:redlock, "~> 0.1.2"}
   ]
 end
 ```
@@ -84,6 +84,8 @@ Supervisor.start_link(children, strategy: :one_for_one)
 
 ## Options
 
+### Single Node Mode
+
 ```elixir
 readlock_opts = [
 
@@ -110,5 +112,44 @@ readlock_opts = [
 - `reconnection_interval`: (milliseconds) how long you want to wait untill your next try after a redis-disconnection.
 - `servers`: host and port settings for each redis-server. this amount must be odd.
 
+### Cluster Mode
 
+```elixir
+readlock_opts = [
+
+  pool_size:             2,
+  drift_factor:          0.01,
+  max_retry:             3,
+  retry_interval:        300,
+  reconnection_interval: 5_000,
+
+  cluster: [
+    # first node
+    [
+      # you must set odd number of server
+      [host: "redis1.example.com", port: 6379],
+      [host: "redis2.example.com", port: 6379],
+      [host: "redis3.example.com", port: 6379]
+    ],
+    # second node
+    [
+      # you must set odd number of server
+      [host: "redis4.example.com", port: 6379],
+      [host: "redis5.example.com", port: 6379],
+      [host: "redis6.example.com", port: 6379]
+    ],
+    # third node
+    [
+      # you must set odd number of server
+      [host: "redis7.example.com", port: 6379],
+      [host: "redis8.example.com", port: 6379],
+      [host: "redis9.example.com", port: 6379]
+    ]
+  ]
+
+]
+```
+
+Set `cluster` option instead of `servers`, then Redlock works as cluster mode.
+When you want to lock some resource, Redlock chooses a node depends on a resource key with consistent-hashing way (ketama algorithm using md5).
 
