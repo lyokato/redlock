@@ -9,7 +9,7 @@ defmodule Redlock.NodeChooser.Store.HashRing do
     len = length(pools_list)
 
     ring = idx_list(len) |> Enum.reduce(HashRing.new(), fn idx, ring ->
-      {ok, ring2} = HashRing.add_node(ring, "#{idx}")
+      {:ok, ring2} = HashRing.add_node(ring, "#{idx}")
       ring2
     end)
 
