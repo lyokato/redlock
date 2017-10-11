@@ -12,7 +12,7 @@ by adding `redlock` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:redlock, "~> 0.1.3"}
+    {:redlock, "~> 0.1.4"}
   ]
 end
 ```
@@ -35,7 +35,7 @@ case Redlock.lock(resource, lock_exp_sec) do
     Redlock.unlock(resource, mutex)
 
   :error ->
-    Logger.error "failed to lock resource. maybe redis connection got toruble."
+    Logger.error "failed to lock resource. maybe redis connection got trouble."
     {:error, :system_error}
 
 end
