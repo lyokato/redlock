@@ -11,8 +11,11 @@ defmodule Redlock.Config do
             max_retry:        0,
             retry_interval: 300
 
-  def get() do
-    GenServer.call(__MODULE__, :get)
+  def get(key) do
+    case GenServer.call(__MODULE__, {:get, key}) do
+      {:ok, val} -> val
+      :error     -> raise "unknown key: #{key}"
+    end
   end
 
   def start_link(opts) do
@@ -25,14 +28,13 @@ defmodule Redlock.Config do
     max_retry      = Keyword.get(opts, :max_retry, @default_max_retry)
     retry_interval = Keyword.get(opts, :retry_interval, @default_retry_interval)
 
-    #{:ok, %__MODULE__{quorum:         div(length(servers), 2) + 1,
     {:ok, %__MODULE__{max_retry:      max_retry,
                       drift_factor:   drift_factor,
                       retry_interval: retry_interval}}
   end
 
-  def handle_call(:get, _from, state) do
-    {:reply, state, state}
+  def handle_call({:get, key}, _from, state) do
+    {:reply, Map.fetch(state, key), state}
   end
 
   def terminate(_reason, _state), do: :ok

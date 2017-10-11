@@ -6,18 +6,24 @@ defmodule Redlock.NodeChooser do
     GenServer.call(__MODULE__, {:choose, key})
   end
 
-  def start_link(cluster) do
-    GenServer.start_link(__MODULE__, cluster, name: __MODULE__)
+  def start_link(opts) do
+    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  def init(cluster) do
-    ring = cluster |> Enum.reduce(HashRing.new(), &(HashRing.add_node(&2, &1)))
-    {:ok, ring}
+  def init(opts) do
+
+    store_mod  = Keyword.fetch!(opts, :store_mod)
+    pools_list = Keyword.fetch!(opts, :pools_list)
+
+    store = store_mod.new(pools_list)
+
+    {:ok, [store_mod, store]}
+
   end
 
-  def handle_call({:choose, key}, _from, ring) do
-    servers = HashRing.key_to_node(ring, key)
-    {:reply, servers, ring}
+  def handle_call({:choose, key}, _from, [store_mod, store]) do
+    pools = store_mod.choose(store, key)
+    {:reply, pools, [store_mod, store]}
   end
 
 end

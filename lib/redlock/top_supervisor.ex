@@ -49,7 +49,7 @@ defmodule Redlock.TopSupervisor do
 
     [
       config_worker(opts),
-      node_chooser_worker([pool_names])
+      node_chooser_worker(Redlock.NodeChooser.Store.SingleNode, [pool_names])
     ] ++ specs
   end
 
@@ -67,7 +67,7 @@ defmodule Redlock.TopSupervisor do
 
     [
       config_worker(opts),
-      node_chooser_worker(pools_list)
+      node_chooser_worker(Redlock.NodeChooser.Store.HashRing, pools_list)
     ] ++ specs
   end
 
@@ -78,11 +78,12 @@ defmodule Redlock.TopSupervisor do
     {pool_names, specs}
   end
 
-  defp node_chooser_worker(cluster) do
-    worker(Redlock.NodeChooser, [[cluster: cluster]])
+  defp node_chooser_worker(store_mod, pools_list) do
+    worker(Redlock.NodeChooser, [[store_mod: store_mod, pools_list: pools_list]])
   end
 
   defp config_worker(opts) do
+
     drift_factor = Keyword.get(opts, :drift_factor, @default_drift_factor)
     max_retry    = Keyword.get(opts, :max_retry, @default_max_retry)
     interval     = Keyword.get(opts, :retry_interval, @default_retry_interval)
@@ -104,12 +105,12 @@ defmodule Redlock.TopSupervisor do
         :single
 
       true ->
-        raise_error("you need to set proper format of :servers or :cluster")
+        raise_error("should set proper format of :servers or :cluster")
 
     end
   end
   defp choose_mode(_servers, _cluster) do
-      raise_error("you need to set proper format of :servers or :cluster")
+      raise_error("should set proper format of :servers or :cluster")
   end
 
   defp validate_server_setting(servers) when is_list(servers) do
