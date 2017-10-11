@@ -7,8 +7,7 @@ defmodule Redlock.Executor do
   end
 
   def unlock(resource, value) do
-    config = Redlock.Config.get()
-    config.servers |> Enum.each(fn node ->
+    Redlock.NodeChooser.choose(resource) |> Enum.each(fn node ->
       case unlock_on_node(node, resource, value) do
 
         {:ok, _} ->
@@ -32,8 +31,10 @@ defmodule Redlock.Executor do
   defp do_lock(resource, ttl, value, retry, config) do
 
     started_at = Redlock.Util.now()
+    servers    = Redlock.NodeChooser.choose(resource)
+    quorum     = div(length(servers), 2) + 1
 
-    results = config.servers |> Enum.map(fn node ->
+    results = servers |> Enum.map(fn node ->
       case lock_on_node(node, resource, value, ttl * 1000) do
 
         :ok ->
@@ -52,9 +53,9 @@ defmodule Redlock.Executor do
     drift    = ttl * config.drift_factor + 0.002
     validity = ttl - ((Redlock.Util.now() - started_at) / 1000.0) - drift
 
-    Logger.debug "<Redlock> success-#{number_of_success} : quorum-#{config.quorum}"
+    Logger.debug "<Redlock> success-#{number_of_success} : quorum-#{quorum}"
 
-    if number_of_success >= config.quorum and validity > 0 do
+    if number_of_success >= quorum and validity > 0 do
 
       Logger.debug "<Redlock> created lock for #{resource} successfully"
       {:ok, value}

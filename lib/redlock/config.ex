@@ -7,10 +7,8 @@ defmodule Redlock.Config do
   @default_max_retry 5
   @default_retry_interval 300
 
-  defstruct quorum:       0,
-            drift_factor: 0,
-            servers:      [],
-            max_retry:    0,
+  defstruct drift_factor:     0,
+            max_retry:        0,
             retry_interval: 300
 
   def get() do
@@ -23,17 +21,14 @@ defmodule Redlock.Config do
 
   def init(opts) do
 
-    servers        = Keyword.fetch!(opts, :servers)
     drift_factor   = Keyword.get(opts, :drift_factor, @default_drift_factor)
     max_retry      = Keyword.get(opts, :max_retry, @default_max_retry)
     retry_interval = Keyword.get(opts, :retry_interval, @default_retry_interval)
 
-    {:ok, %__MODULE__{quorum:         div(length(servers), 2) + 1,
-                      max_retry:      max_retry,
+    #{:ok, %__MODULE__{quorum:         div(length(servers), 2) + 1,
+    {:ok, %__MODULE__{max_retry:      max_retry,
                       drift_factor:   drift_factor,
-                      retry_interval: retry_interval,
-                      servers:        servers}}
-
+                      retry_interval: retry_interval}}
   end
 
   def handle_call(:get, _from, state) do

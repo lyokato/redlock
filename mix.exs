@@ -23,6 +23,7 @@ defmodule Redlock.Mixfile do
       {:ex_doc, "~> 0.15", only: :dev, runtime: false},
       {:redix, "~> 0.6.1"},
       {:poolboy, "~> 1.5"},
+      {:libring, "~> 1.2"},
       {:secure_random, "~> 0.5.1"}
     ]
   end

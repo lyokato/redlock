@@ -62,6 +62,8 @@ defmodule Redlock do
 
   ## Options
 
+  Single Node Mode
+
       readlock_opts = [
 
         pool_size:             2,
@@ -86,6 +88,45 @@ defmodule Redlock do
   - `reconnection_interval`: (milliseconds) how long you want to wait untill your next try after a redis-disconnection.
   - `servers`: host and port settings for each redis-server. this amount must be odd.
 
+  Cluster Mode
+
+      readlock_opts = [
+
+        pool_size:             2,
+        drift_factor:          0.01,
+        max_retry:             3,
+        retry_interval:        300,
+        reconnection_interval: 5_000,
+
+        cluster: [
+          # first node
+          [
+            # you must set odd number of server
+            [host: "redis1.example.com", port: 6379],
+            [host: "redis2.example.com", port: 6379],
+            [host: "redis3.example.com", port: 6379]
+          ],
+          # second node
+          [
+            # you must set odd number of server
+            [host: "redis4.example.com", port: 6379],
+            [host: "redis5.example.com", port: 6379],
+            [host: "redis6.example.com", port: 6379]
+          ],
+          # third node
+          [
+            # you must set odd number of server
+            [host: "redis7.example.com", port: 6379],
+            [host: "redis8.example.com", port: 6379],
+            [host: "redis9.example.com", port: 6379]
+          ]
+        ]
+
+      ]
+
+  Set `cluster` option instead of `servers`, then Redlock works as cluster mode.
+  When you want to lock some resource, Redlock chooses a node depends on a resource key with consistent-hashing.
+
   """
 
   def child_spec(opts) do
@@ -100,7 +141,7 @@ defmodule Redlock do
         try do
           callback.()
         after
-          Redlock.unlock(resource, mutex)
+          Redlock.Executor.unlock(resource, mutex)
         end
 
       :error ->
