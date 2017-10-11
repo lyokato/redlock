@@ -35,7 +35,7 @@ case Redlock.lock(resource, lock_exp_sec) do
     Redlock.unlock(resource, mutex)
 
   :error ->
-    Logger.error "failed to lock resource. maybe redis connection got toruble."
+    Logger.error "failed to lock resource. maybe redis connection got trouble."
     {:error, :system_error}
 
 end
