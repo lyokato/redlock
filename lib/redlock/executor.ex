@@ -2,7 +2,6 @@ defmodule Redlock.Executor do
 
   require Logger
 
-  alias Redlock.Config
   alias Redlock.Command
   alias Redlock.ConnectionKeeper
   alias Redlock.NodeChooser
@@ -10,11 +9,11 @@ defmodule Redlock.Executor do
   import Redlock.Util, only: [now: 0, random_value: 0]
 
   def lock(resource, ttl) do # TTL = seconds
-    do_lock(resource, ttl, random_value(), 0, Config.get(:all))
+    do_lock(resource, ttl, random_value(), 0, FastGlobal.get(:redlock_conf))
   end
 
   def unlock(resource, value) do
-    debug_logs_enabled = Config.get(:show_debug_logs)
+    debug_logs_enabled = FastGlobal.get(:redlock_conf).show_debug_logs
     NodeChooser.choose(resource) |> Enum.each(fn node ->
       case unlock_on_node(node, resource, value) do
 
@@ -77,7 +76,7 @@ defmodule Redlock.Executor do
 
       Logger.warn "<Redlock> failed to lock:#{resource}, retry after interval"
       Process.sleep(config.retry_interval)
-      do_lock(resource, ttl, value, retry + 1, config.max_retry)
+      do_lock(resource, ttl, value, retry + 1, config)
 
     end
 

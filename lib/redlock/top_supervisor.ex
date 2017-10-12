@@ -20,8 +20,8 @@ defmodule Redlock.TopSupervisor do
   end
 
   def init(opts) do
-    children(opts)
-    |> supervise(strategy: :one_for_one)
+    prepare_global_config(opts)
+    children(opts) |> supervise(strategy: :one_for_one)
   end
 
   defp children(opts) do
@@ -34,26 +34,21 @@ defmodule Redlock.TopSupervisor do
     case choose_mode(servers, cluster) do
 
       :single ->
-        setup_single_node(opts, pool_size, servers)
+        setup_single_node(pool_size, servers)
 
       :cluster ->
-        setup_cluster(opts, pool_size, cluster)
+        setup_cluster(pool_size, cluster)
 
     end
 
   end
 
-  defp setup_single_node(opts, pool_size, servers) do
-
+  defp setup_single_node(pool_size, servers) do
     {pool_names, specs} = gather_node_setting(pool_size, servers)
-
-    [
-      config_worker(opts),
-      node_chooser_worker(Redlock.NodeChooser.Store.SingleNode, [pool_names])
-    ] ++ specs
+    [node_chooser_worker(Redlock.NodeChooser.Store.SingleNode, [pool_names]) | specs]
   end
 
-  defp setup_cluster(opts, pool_size, cluster) do
+  defp setup_cluster(pool_size, cluster) do
 
     node_settings = cluster
                   |> Enum.map(&(gather_node_setting(pool_size, &1)))
@@ -65,32 +60,34 @@ defmodule Redlock.TopSupervisor do
     pools_list = node_settings
                 |> Enum.map(fn {pools, _} -> pools end)
 
-    [
-      config_worker(opts),
-      node_chooser_worker(Redlock.NodeChooser.Store.HashRing, pools_list)
-    ] ++ specs
+    [node_chooser_worker(Redlock.NodeChooser.Store.HashRing, pools_list) | specs]
+
   end
 
   defp gather_node_setting(pool_size, servers) do
-    {pool_names, specs} = servers
-                        |> Enum.map(&(node_supervisor(&1, pool_size)))
-                        |> Enum.unzip()
-    {pool_names, specs}
+    servers
+    |> Enum.map(&(node_supervisor(&1, pool_size)))
+    |> Enum.unzip()
   end
 
   defp node_chooser_worker(store_mod, pools_list) do
     worker(Redlock.NodeChooser, [[store_mod: store_mod, pools_list: pools_list]])
   end
 
-  defp config_worker(opts) do
+  defp prepare_global_config(opts) do
 
-    drift_factor = Keyword.get(opts, :drift_factor, @default_drift_factor)
-    max_retry    = Keyword.get(opts, :max_retry, @default_max_retry)
-    interval     = Keyword.get(opts, :retry_interval, @default_retry_interval)
+    drift_factor    = Keyword.get(opts, :drift_factor, @default_drift_factor)
+    max_retry       = Keyword.get(opts, :max_retry, @default_max_retry)
+    retry_interval  = Keyword.get(opts, :retry_interval, @default_retry_interval)
+    show_debug_logs = Keyword.get(opts, :show_debug_logs, false)
 
-    worker(Redlock.Config, [[drift_factor:   drift_factor,
-                             max_retry:      max_retry,
-                             retry_interval: interval]])
+    FastGlobal.put(:redlock_conf, %{
+      drift_factor:    drift_factor,
+      max_retry:       max_retry,
+      retry_interval:  retry_interval,
+      show_debug_logs: show_debug_logs
+    })
+
   end
 
   defp choose_mode(servers, cluster) when is_list(servers) and is_list(cluster) do

@@ -23,6 +23,7 @@ defmodule Redlock.Mixfile do
       {:ex_doc, "~> 0.15", only: :dev, runtime: false},
       {:redix, "~> 0.6.1"},
       {:poolboy, "~> 1.5"},
+      {:fastglobal, "~> 1.0.0"},
       {:ex_hash_ring, "~> 1.0"},
       {:secure_random, "~> 0.5.1"}
     ]
