@@ -10,15 +10,16 @@ defmodule Redlock.Executor do
   import Redlock.Util, only: [now: 0, random_value: 0]
 
   def lock(resource, ttl) do # TTL = seconds
-    do_lock(resource, ttl, random_value(), 0, Config.get(:max_retry))
+    do_lock(resource, ttl, random_value(), 0, Config.get(:all))
   end
 
   def unlock(resource, value) do
+    debug_logs_enabled = Config.get(:show_debug_logs)
     NodeChooser.choose(resource) |> Enum.each(fn node ->
       case unlock_on_node(node, resource, value) do
 
         {:ok, _} ->
-          Logger.debug "<Redlock> unlocked successfully on node: #{node}"
+          debug_log(debug_logs_enabled, "<Redlock> unlocked successfully on node: #{node}")
           :ok
 
         {:error, reason} ->
@@ -29,13 +30,13 @@ defmodule Redlock.Executor do
     end)
   end
 
-  defp do_lock(resource, _ttl, _value, retry, max_retry)
+  defp do_lock(resource, _ttl, _value, retry, %{max_retry: max_retry})
     when retry >= max_retry do
     Logger.error "<Redlock> failed to lock resource eventually: #{resource}"
     :error
   end
 
-  defp do_lock(resource, ttl, value, retry, max_retry) do
+  defp do_lock(resource, ttl, value, retry, config) do
 
     started_at = now()
     servers    = NodeChooser.choose(resource)
@@ -45,7 +46,8 @@ defmodule Redlock.Executor do
       case lock_on_node(node, resource, value, ttl * 1000) do
 
         :ok ->
-          Logger.debug "<Redlock> locked successfully on node: #{node}"
+          debug_log(config.show_debug_logs,
+                    "<Redlock> locked successfully on node: #{node}")
           true
 
         {:error, reason} ->
@@ -57,22 +59,25 @@ defmodule Redlock.Executor do
 
     number_of_success = results |> Enum.count(&(&1))
 
-    drift        = ttl * Config.get(:drift_factor) + 0.002
+    drift        = ttl * config.drift_factor + 0.002
     elapsed_time = now() - started_at
     validity     = ttl - (elapsed_time / 1000.0) - drift
 
-    Logger.debug "<Redlock> elapsed-#{elapsed_time} : success-#{number_of_success} : quorum-#{quorum}"
+    debug_log(config.show_debug_logs,
+              "<Redlock> elapsed-#{elapsed_time} : success-#{number_of_success} : quorum-#{quorum}")
 
     if number_of_success >= quorum and validity > 0 do
 
-      Logger.debug "<Redlock> created lock for #{resource} successfully"
+      debug_log(config.show_debug_logs,
+                "<Redlock> created lock for #{resource} successfully")
+
       {:ok, value}
 
     else
 
       Logger.warn "<Redlock> failed to lock:#{resource}, retry after interval"
-      Process.sleep(Config.get(:retry_interval))
-      do_lock(resource, ttl, value, retry + 1, max_retry)
+      Process.sleep(config.retry_interval)
+      do_lock(resource, ttl, value, retry + 1, config.max_retry)
 
     end
 
@@ -103,6 +108,9 @@ defmodule Redlock.Executor do
       end
     end)
   end
+
+  defp debug_log(false, _msg), do: :ok
+  defp debug_log(true, msg), do: Logger.debug(msg)
 
 end
 

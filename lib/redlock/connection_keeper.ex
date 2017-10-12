@@ -33,7 +33,9 @@ defmodule Redlock.ConnectionKeeper do
                           [sync_connect: true, exit_on_disconnection: true]) do
 
       {:ok, pid} ->
-        Logger.debug "<Redlock.ConnectionKeeper:#{host}:#{port}> connected to Redis"
+        if Redlock.Config.get(:show_debug_logs) do
+          Logger.debug "<Redlock.ConnectionKeeper:#{host}:#{port}> connected to Redis"
+        end
         install_script(pid, state)
 
       other ->
