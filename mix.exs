@@ -4,7 +4,7 @@ defmodule Redlock.Mixfile do
   def project do
     [
       app: :redlock,
-      version: "0.1.4",
+      version: "0.1.5",
       elixir: "~> 1.4",
       package: package(),
       start_permanent: Mix.env == :prod,
