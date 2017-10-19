@@ -1,13 +1,8 @@
 defmodule Redlock.NodeChooser do
 
-  use GenServer
-
   def choose(key) do
-    GenServer.call(__MODULE__, {:choose, key})
-  end
-
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+    [store_mod, store] = FastGlobal.get(:redlock_nodes)
+    store_mod.choose(store, key)
   end
 
   def init(opts) do
@@ -17,13 +12,8 @@ defmodule Redlock.NodeChooser do
 
     store = store_mod.new(pools_list)
 
-    {:ok, [store_mod, store]}
+    FastGlobal.put(:redlock_nodes, [store_mod, store])
 
-  end
-
-  def handle_call({:choose, key}, _from, [store_mod, store]) do
-    pools = store_mod.choose(store, key)
-    {:reply, pools, [store_mod, store]}
   end
 
 end
