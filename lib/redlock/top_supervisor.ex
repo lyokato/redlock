@@ -44,8 +44,13 @@ defmodule Redlock.TopSupervisor do
   end
 
   defp setup_single_node(pool_size, servers) do
+
     {pool_names, specs} = gather_node_setting(pool_size, servers)
-    [node_chooser_worker(Redlock.NodeChooser.Store.SingleNode, [pool_names]) | specs]
+
+    prepare_node_chooser(Redlock.NodeChooser.Store.SingleNode, [pool_names])
+
+    specs
+
   end
 
   defp setup_cluster(pool_size, cluster) do
@@ -60,7 +65,9 @@ defmodule Redlock.TopSupervisor do
     pools_list = node_settings
                 |> Enum.map(fn {pools, _} -> pools end)
 
-    [node_chooser_worker(Redlock.NodeChooser.Store.HashRing, pools_list) | specs]
+    prepare_node_chooser(Redlock.NodeChooser.Store.HashRing, pools_list)
+
+    specs
 
   end
 
@@ -70,8 +77,8 @@ defmodule Redlock.TopSupervisor do
     |> Enum.unzip()
   end
 
-  defp node_chooser_worker(store_mod, pools_list) do
-    worker(Redlock.NodeChooser, [[store_mod: store_mod, pools_list: pools_list]])
+  defp prepare_node_chooser(store_mod, pools_list) do
+    Redlock.NodeChooser.init([store_mod: store_mod, pools_list: pools_list])
   end
 
   defp prepare_global_config(opts) do
