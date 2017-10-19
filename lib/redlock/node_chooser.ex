@@ -1,7 +1,5 @@
 defmodule Redlock.NodeChooser do
 
-  use GenServer
-
   def choose(key) do
     [store_mod, store] = FastGlobal.get(:redlock_nodes)
     store_mod.choose(store, key)
