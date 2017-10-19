@@ -18,7 +18,7 @@ defmodule Redlock.Executor do
       case unlock_on_node(node, resource, value) do
 
         {:ok, _} ->
-          debug_log(debug_logs_enabled, "<Redlock> unlocked successfully on node: #{node}")
+          debug_log(debug_logs_enabled, "<Redlock> unlocked '#{resource}' successfully on node: #{node}")
           :ok
 
         {:error, reason} ->
@@ -46,7 +46,7 @@ defmodule Redlock.Executor do
 
         :ok ->
           debug_log(config.show_debug_logs,
-                    "<Redlock> locked successfully on node: #{node}")
+                    "<Redlock> locked '#{resource}' successfully on node: #{node}")
           true
 
         {:error, reason} ->
@@ -68,13 +68,13 @@ defmodule Redlock.Executor do
     if number_of_success >= quorum and validity > 0 do
 
       debug_log(config.show_debug_logs,
-                "<Redlock> created lock for #{resource} successfully")
+                "<Redlock> created lock for '#{resource}' successfully")
 
       {:ok, value}
 
     else
 
-      Logger.warn "<Redlock> failed to lock:#{resource}, retry after interval"
+      Logger.warn "<Redlock> failed to lock '#{resource}', retry after interval"
       Process.sleep(config.retry_interval)
       do_lock(resource, ttl, value, retry + 1, config)
 
