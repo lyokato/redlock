@@ -56,7 +56,7 @@ defmodule Redlock do
       children = [
         # other workers/supervisors
 
-        Redlock.child_spec(redlock_opts)
+        {Redlock, redlock_opts}
       ]
       Supervisor.start_link(children, strategy: :one_for_one)
 
@@ -130,8 +130,7 @@ defmodule Redlock do
   """
 
   def child_spec(opts) do
-    import Supervisor.Spec
-    supervisor(Redlock.TopSupervisor, [opts])
+    Redlock.Supervisor.child_spec(opts)
   end
 
   def transaction(resource, ttl, callback) do

@@ -1,4 +1,4 @@
-defmodule Redlock.TopSupervisor do
+defmodule Redlock.Supervisor do
 
   use Supervisor
   require Logger

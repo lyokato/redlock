@@ -12,7 +12,7 @@ by adding `redlock` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:redlock, "~> 0.1.6"}
+    {:redlock, "~> 0.1.7"}
   ]
 end
 ```
@@ -77,7 +77,7 @@ end
 children = [
   # other workers/supervisors
 
-  Redlock.child_spec(redlock_opts)
+  {Redlock, [pool_size: 2, ...]}
 ]
 Supervisor.start_link(children, strategy: :one_for_one)
 ```
