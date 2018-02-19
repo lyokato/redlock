@@ -31,7 +31,7 @@ defmodule Redlock.Executor do
 
   defp do_lock(resource, _ttl, _value, retry, %{max_retry: max_retry})
     when retry >= max_retry do
-    Logger.error "<Redlock> failed to lock resource eventually: #{resource}"
+    Logger.warn "<Redlock> failed to lock resource eventually: #{resource}"
     :error
   end
 
@@ -50,7 +50,6 @@ defmodule Redlock.Executor do
           true
 
         {:error, reason} ->
-          Logger.warn "<Redlock> failed to execute redis-lock-command: #{inspect reason}"
           false
 
       end
@@ -74,7 +73,7 @@ defmodule Redlock.Executor do
 
     else
 
-      Logger.warn "<Redlock> failed to lock '#{resource}', retry after interval"
+      Logger.info "<Redlock> failed to lock '#{resource}', retry after interval"
       Process.sleep(config.retry_interval)
       do_lock(resource, ttl, value, retry + 1, config)
 
@@ -89,7 +88,9 @@ defmodule Redlock.Executor do
         {:ok, redix} ->
           Command.lock(redix, resource, value, ttl)
 
-        {:error, :not_found} = error -> error
+        {:error, :not_found} = error ->
+          Logger.warn "<Redlock> connection is currently unavailable"
+          error
 
       end
     end)
@@ -102,7 +103,9 @@ defmodule Redlock.Executor do
         {:ok, redix} ->
           Command.unlock(redix, resource, value)
 
-        {:error, :not_found} = error -> error
+        {:error, :not_found} = error ->
+          Logger.warn "<Redlock> connection is currently unavailable"
+          error
 
       end
     end)
