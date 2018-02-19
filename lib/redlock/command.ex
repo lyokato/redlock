@@ -34,7 +34,9 @@ end
 
       {:ok, "OK"} -> :ok
 
-      {:ok, nil} -> {:error, :already_locked}
+      {:ok, nil} ->
+        Logger.info "<Redlock> resource:#{resource} is already locked"
+        {:error, :already_locked}
 
       other ->
         Logger.error "<Redlock> failed to execute redis SET: #{inspect other}"
