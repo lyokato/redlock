@@ -10,23 +10,25 @@ defmodule Redlock.NodeSupervisor do
 
   def init(opts) do
 
-    name     = Keyword.fetch!(opts, :pool_name)
-    host     = Keyword.fetch!(opts, :host)
-    port     = Keyword.fetch!(opts, :port)
-    interval = Keyword.fetch!(opts, :reconnection_interval)
-    size     = Keyword.fetch!(opts, :pool_size)
+    name          = Keyword.fetch!(opts, :pool_name)
+    host          = Keyword.fetch!(opts, :host)
+    port          = Keyword.fetch!(opts, :port)
+    interval_base = Keyword.fetch!(opts, :reconnection_interval_base)
+    interval_max  = Keyword.fetch!(opts, :reconnection_interval_max)
+    size          = Keyword.fetch!(opts, :pool_size)
 
-    children(name, host, port, interval, size)
+    children(name, host, port, interval_base, interval_max, size)
     |> supervise(strategy: :one_for_one)
 
   end
 
-  defp children(name, host, port, interval, size) do
+  defp children(name, host, port, interval_base, interval_max, size) do
     [:poolboy.child_spec(name,
                          pool_opts(name, size),
-                         [host:                  host,
-                          port:                  port,
-                          reconnection_interval: interval])]
+                         [host: host,
+                          port: port,
+                          reconnection_interval_base: interval_base,
+                          reconnection_interval_max:  interval_max])]
   end
 
   defp pool_opts(name, size) do

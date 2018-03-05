@@ -62,15 +62,17 @@ defmodule Redlock do
 
   ## Options
 
-  Single Node Mode
+  ### Single Node Mode
 
       readlock_opts = [
 
         pool_size:             2,
         drift_factor:          0.01,
         max_retry:             3,
-        retry_interval:        300,
-        reconnection_interval: 5_000,
+        retry_interval_base:   300,
+        retry_interval_max:    3_000,
+        reconnection_interval_base: 500,
+        reconnection_interval_max: 5_000,
 
         # you must set odd number of server
         servers: [
@@ -84,19 +86,29 @@ defmodule Redlock do
   - `pool_size`: pool_size of number of connection pool for each Redis master node, default is 2
   - `drift_factor`: number used for calculating validity for results, see https://redis.io/topics/distlock for more detail.
   - `max_retry`: how many times you want to retry if you failed to lock resource.
-  - `retry_interval`: (milliseconds) how long you want to wait untill your next try after a lock-failure.
-  - `reconnection_interval`: (milliseconds) how long you want to wait untill your next try after a redis-disconnection.
+  - `retry_interval_max`: (milliseconds) used to decide how long you want to wait untill your next try after a lock-failure.
+  - `retry_interval_base`: (milliseconds) used to decide how long you want to wait untill your next try after a lock-failure.
+  - `reconnection_interval_base`: (milliseconds) used to decide how long you want to wait until your next try after a redis-disconnection
+  - `reconnection_interval_max`: (milliseconds) used to decide how long you want to wait until your next try after a redis-disconnection
   - `servers`: host and port settings for each redis-server. this amount must be odd.
 
-  Cluster Mode
+  #### How long you want to wait until your next try after a redis-disconnection or lock-failure
+
+  the interval(milliseconds) is decided by following calculation.
+
+  min(XXX_interval_max, (XXX_interval_base * (attempts_count ** 2)))
+
+  ### Cluster Mode
 
       readlock_opts = [
 
         pool_size:             2,
         drift_factor:          0.01,
         max_retry:             3,
-        retry_interval:        300,
-        reconnection_interval: 5_000,
+        retry_interval_base:   300,
+        retry_interval_max:    3_000,
+        reconnection_interval_base: 500,
+        reconnection_interval_max: 5_000,
 
         cluster: [
           # first node

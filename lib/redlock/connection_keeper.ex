@@ -1,7 +1,8 @@
 defmodule Redlock.ConnectionKeeper do
 
   @default_port 6379
-  @default_reconnection_interval 5_000
+  @default_reconnection_interval_base 500
+  @default_reconnection_interval_max  5_000
 
   require Logger
 
@@ -15,7 +16,9 @@ defmodule Redlock.ConnectionKeeper do
   defstruct host: "",
             port: nil,
             redix: nil,
-            reconnection_interval: 0
+            reconnection_interval_base: 0,
+            reconnection_interval_max:  0,
+            reconnection_attempts:      0
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts)
@@ -27,7 +30,7 @@ defmodule Redlock.ConnectionKeeper do
     {:ok, new(opts)}
   end
 
-  def handle_info(:connect, %{host: host, port: port}=state) do
+  def handle_info(:connect, %{host: host, port: port, reconnection_attempts: attempts}=state) do
 
     case Redix.start_link([host: host, port: port],
                           [sync_connect: true, exit_on_disconnection: true]) do
@@ -40,17 +43,17 @@ defmodule Redlock.ConnectionKeeper do
 
       other ->
         Logger.error "<Redlock.ConnectionKeeper:#{host}:#{port}> failed to connect, try to re-connect after interval: #{inspect other}"
-        Process.send_after(self(), :connect, state.reconnection_interval)
-        {:noreply, %{state| redix: nil}}
+        Process.send_after(self(), :connect, calc_backoff(state))
+        {:noreply, %{state| redix: nil, reconnection_attempts: attempts + 1}}
 
     end
 
   end
 
-  def handle_info({:EXIT, pid, _reason}, %{host: host, port: port, redix: pid}=state) do
+  def handle_info({:EXIT, pid, _reason}, %{host: host, port: port, redix: pid, reconnection_attempts: attempts}=state) do
     Logger.error "<Redlock.ConnectionKeeper:#{host}:#{port}> seems to be disconnected, try to re-connect"
-    Process.send_after(self(), :connect, state.reconnection_interval)
-    {:noreply, %{state| redix: nil}}
+    Process.send_after(self(), :connect, calc_backoff(state))
+    {:noreply, %{state| redix: nil, reconnection_attempts: attempts + 1}}
   end
 
   def handle_info(_info, state) do
@@ -70,20 +73,39 @@ defmodule Redlock.ConnectionKeeper do
 
     host = Keyword.fetch!(opts, :host)
     port = Keyword.get(opts, :port, @default_port)
-    reconnection_interval = Keyword.get(opts, :reconnection_interval, @default_reconnection_interval)
 
-    %__MODULE__{host: host,
-                port: port,
-                redix: nil,
-                reconnection_interval: reconnection_interval}
+    reconnection_interval_base =
+      Keyword.get(opts,
+                  :reconnection_interval_base,
+                  @default_reconnection_interval_base)
 
+    reconnection_interval_max  =
+      Keyword.get(opts,
+                  :reconnection_interval_max,
+                  @default_reconnection_interval_max)
+
+    %__MODULE__{
+      host:                       host,
+      port:                       port,
+      redix:                      nil,
+      reconnection_attempts:      0,
+      reconnection_interval_base: reconnection_interval_base,
+      reconnection_interval_max:  reconnection_interval_max
+    }
+
+  end
+
+  defp calc_backoff(state) do
+    Redlock.Util.calc_backoff(state.reconnection_interval_base,
+                              state.reconnection_interval_max,
+                              state.reconnection_attempts)
   end
 
   defp install_script(pid, %{host: host, port: port}=state) do
     case Redlock.Command.install_script(pid) do
 
       {:ok, _val} ->
-        {:noreply, %{state| redix: pid}}
+        {:noreply, %{state| redix: pid, reconnection_attempts: 0}}
 
       other ->
         Logger.warn "<Redlock:ConnectionKeeper:#{host}:#{port}> failed to install script: #{inspect other}"

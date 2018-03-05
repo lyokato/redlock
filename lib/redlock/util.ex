@@ -8,4 +8,11 @@ defmodule Redlock.Util do
     System.system_time(:milli_seconds)
   end
 
+  def calc_backoff(base_ms, max_ms, attempt_counts) do
+    base_ms * :math.pow(2, attempt_counts)
+    |> min(max_ms)
+    |> trunc
+    |> :rand.uniform
+  end
+
 end
