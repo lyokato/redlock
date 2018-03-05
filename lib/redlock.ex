@@ -92,7 +92,7 @@ defmodule Redlock do
   - `reconnection_interval_max`: (milliseconds) used to decide how long you want to wait until your next try after a redis-disconnection
   - `servers`: host and port settings for each redis-server. this amount must be odd.
 
-  ### How long you want to wait until your next try after a redis-disconnection or lock-failure
+  #### How long you want to wait until your next try after a redis-disconnection or lock-failure
 
   the interval(milliseconds) is decided by following calculation.
 
