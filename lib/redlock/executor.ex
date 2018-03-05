@@ -35,7 +35,7 @@ defmodule Redlock.Executor do
     :error
   end
 
-  defp do_lock(resource, ttl, value, retry, config) do
+  defp do_lock(resource, ttl, value, attempts, config) do
 
     started_at = now()
     servers    = NodeChooser.choose(resource)
@@ -49,7 +49,7 @@ defmodule Redlock.Executor do
                     "<Redlock> locked '#{resource}' successfully on node: #{node}")
           true
 
-        {:error, reason} ->
+        {:error, _reason} ->
           false
 
       end
@@ -74,11 +74,17 @@ defmodule Redlock.Executor do
     else
 
       Logger.info "<Redlock> failed to lock '#{resource}', retry after interval"
-      Process.sleep(config.retry_interval)
-      do_lock(resource, ttl, value, retry + 1, config)
+      calc_backoff(config, attempts) |> Process.sleep()
+      do_lock(resource, ttl, value, attempts + 1, config)
 
     end
 
+  end
+
+  defp calc_backoff(config, attempts) do
+    Redlock.Util.calc_backoff(config.retry_interval_base,
+                              config.retry_interval_max,
+                              attempts)
   end
 
   defp lock_on_node(node, resource, value, ttl) do
