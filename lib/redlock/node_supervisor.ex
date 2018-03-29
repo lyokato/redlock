@@ -35,7 +35,7 @@ defmodule Redlock.NodeSupervisor do
     [{:name, {:local, name}},
      {:worker_module, Redlock.ConnectionKeeper},
      {:size, size},
-     {:max_overflow, size}]
+     {:max_overflow, 0}]
   end
 
 end
