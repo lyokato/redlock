@@ -12,7 +12,7 @@ by adding `redlock` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:redlock, "~> 0.1.10"}
+    {:redlock, "~> 0.1.12"}
   ]
 end
 ```

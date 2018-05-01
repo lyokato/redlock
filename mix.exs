@@ -4,7 +4,7 @@ defmodule Redlock.Mixfile do
   def project do
     [
       app: :redlock,
-      version: "0.1.10",
+      version: "0.1.12",
       elixir: "~> 1.4",
       package: package(),
       start_permanent: Mix.env == :prod,
@@ -21,7 +21,7 @@ defmodule Redlock.Mixfile do
   defp deps do
     [
       {:ex_doc, "~> 0.15", only: :dev, runtime: false},
-      {:redix, "~> 0.6.1"},
+      {:redix, ">= 0.6.1"},
       {:poolboy, "~> 1.5"},
       {:fastglobal, "~> 1.0.0"},
       {:ex_hash_ring, "~> 1.0"},
