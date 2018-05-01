@@ -3,11 +3,11 @@ defmodule Redlock.Command do
   require Logger
 
   @helper_script ~S"""
-if redis.call("get",KEYS[1]) == ARGV[1] then
-  return redis.call("del",KEYS[1])
-else
-  return 0
-end
+  if redis.call("get",KEYS[1]) == ARGV[1] then
+    return redis.call("del",KEYS[1])
+  else
+    return 0
+  end
   """
 
   def helper_hash() do
