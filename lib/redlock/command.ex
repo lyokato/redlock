@@ -30,7 +30,7 @@ defmodule Redlock.Command do
   end
 
   def lock(redix, resource, value, ttl) do
-    case Redix.command(redix, ["SET", resource, value, "NX", "PX", ttl * 1000]) do
+    case Redix.command(redix, ["SET", resource, value, "NX", "PX", ttl]) do
 
       {:ok, "OK"} -> :ok
 
