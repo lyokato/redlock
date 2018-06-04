@@ -114,7 +114,7 @@ readlock_opts = [
 - `retry_interval_base`: (milliseconds) used to decide how long you want to wait untill your next try after a lock-failure.
 - `reconnection_interval_base`: (milliseconds) used to decide how long you want to wait until your next try after a redis-disconnection
 - `reconnection_interval_max`: (milliseconds) used to decide how long you want to wait until your next try after a redis-disconnection
-- `servers`: host and port settings for each redis-server. this amount must be odd.
+- `servers`: host, port and auth settings for each redis-server. this amount must be odd. Auth can be omitted if no authentication is reaquired
 
 #### How long you want to wait until your next try after a redis-disconnection or lock-failure
 
@@ -141,9 +141,9 @@ readlock_opts = [
     # first node
     [
       # you must set odd number of server
-      [host: "redis1.example.com", port: 6379],
-      [host: "redis2.example.com", port: 6379],
-      [host: "redis3.example.com", port: 6379]
+      [host: "redis1.example.com", port: 6379, auth: password],
+      [host: "redis2.example.com", port: 6379, auth: password],
+      [host: "redis3.example.com", port: 6379, auth: password]
     ],
     # second node
     [
@@ -166,4 +166,3 @@ readlock_opts = [
 
 Set `cluster` option instead of `servers`, then Redlock works as cluster mode.
 When you want to lock some resource, Redlock chooses a node depends on a resource key with consistent-hashing way (ketama algorithm using md5).
-
