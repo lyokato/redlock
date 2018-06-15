@@ -23,7 +23,7 @@ defmodule Redlock.Supervisor do
 
   def init(opts) do
     prepare_global_config(opts)
-    children(opts) |> supervise(strategy: :one_for_one)
+    children(opts) |> Supervisor.init(strategy: :one_for_one)
   end
 
   defp children(opts) do

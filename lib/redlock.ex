@@ -8,9 +8,9 @@ defmodule Redlock do
   ## Usage
 
       resource = "example_key:#{user_id}"
-      lock_exp_sec = 10
+      lock_exp_ms = 10
 
-      case Redlock.lock(resource, lock_exp_sec) do
+      case Redlock.lock(resource, lock_exp_ms) do
 
         {:ok, mutex} ->
           # some other code which write and read on RDBMS, KVS or other storage
@@ -32,9 +32,9 @@ defmodule Redlock do
       def execute_with_lock() do
 
         resource = "example_key:#{user_id}"
-        lock_exp_sec = 10
+        lock_exp_ms = 10
 
-        case Redlock.transaction(resource, lock_exp_sec, &my_function/0) do
+        case Redlock.transaction(resource, lock_exp_ms, &my_function/0) do
 
           {:ok, :my_result} ->
             Logger.info "this is the return-value of my_function/0"
@@ -90,7 +90,7 @@ defmodule Redlock do
   - `retry_interval_base`: (milliseconds) used to decide how long you want to wait untill your next try after a lock-failure.
   - `reconnection_interval_base`: (milliseconds) used to decide how long you want to wait until your next try after a redis-disconnection
   - `reconnection_interval_max`: (milliseconds) used to decide how long you want to wait until your next try after a redis-disconnection
-  - `servers`: host and port settings for each redis-server. this amount must be odd.
+  - `servers`: host, port and auth settings for each redis-server. this amount must be odd. Auth can be omitted if no authentication is reaquired
 
   #### How long you want to wait until your next try after a redis-disconnection or lock-failure
 
