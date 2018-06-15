@@ -8,9 +8,9 @@ defmodule Redlock do
   ## Usage
 
       resource = "example_key:#{user_id}"
-      lock_exp_sec = 10
+      lock_exp_ms = 10
 
-      case Redlock.lock(resource, lock_exp_sec) do
+      case Redlock.lock(resource, lock_exp_ms) do
 
         {:ok, mutex} ->
           # some other code which write and read on RDBMS, KVS or other storage
@@ -32,9 +32,9 @@ defmodule Redlock do
       def execute_with_lock() do
 
         resource = "example_key:#{user_id}"
-        lock_exp_sec = 10
+        lock_exp_ms = 10
 
-        case Redlock.transaction(resource, lock_exp_sec, &my_function/0) do
+        case Redlock.transaction(resource, lock_exp_ms, &my_function/0) do
 
           {:ok, :my_result} ->
             Logger.info "this is the return-value of my_function/0"

@@ -19,7 +19,7 @@ defmodule Redlock.NodeSupervisor do
     size          = Keyword.fetch!(opts, :pool_size)
 
     children(name, host, port, auth, interval_base, interval_max, size)
-    |> supervise(strategy: :one_for_one)
+    |> Supervisor.init(strategy: :one_for_one)
 
   end
 
