@@ -16,6 +16,7 @@ defmodule Redlock.ConnectionKeeper do
   defstruct host: "",
             port: nil,
             redix: nil,
+            auth: nil,
             reconnection_interval_base: 0,
             reconnection_interval_max:  0,
             reconnection_attempts:      0
@@ -30,15 +31,14 @@ defmodule Redlock.ConnectionKeeper do
     {:ok, new(opts)}
   end
 
-  def handle_info(:connect, %{host: host, port: port, reconnection_attempts: attempts}=state) do
-
+  def handle_info(:connect, %{host: host, port: port, auth: auth, reconnection_attempts: attempts}=state) do
     case Redix.start_link([host: host, port: port],
                           [sync_connect: true, exit_on_disconnection: true]) do
-
       {:ok, pid} ->
         if FastGlobal.get(:redlock_conf).show_debug_logs do
           Logger.debug "<Redlock.ConnectionKeeper:#{host}:#{port}> connected to Redis"
         end
+        auth && authenticate(pid, state)
         install_script(pid, state)
 
       other ->
@@ -73,6 +73,7 @@ defmodule Redlock.ConnectionKeeper do
 
     host = Keyword.fetch!(opts, :host)
     port = Keyword.get(opts, :port, @default_port)
+    auth = Keyword.get(opts, :auth)
 
     reconnection_interval_base =
       Keyword.get(opts,
@@ -87,6 +88,7 @@ defmodule Redlock.ConnectionKeeper do
     %__MODULE__{
       host:                       host,
       port:                       port,
+      auth:                       auth,
       redix:                      nil,
       reconnection_attempts:      0,
       reconnection_interval_base: reconnection_interval_base,
@@ -99,6 +101,18 @@ defmodule Redlock.ConnectionKeeper do
     Redlock.Util.calc_backoff(state.reconnection_interval_base,
                               state.reconnection_interval_max,
                               state.reconnection_attempts)
+  end
+
+  defp authenticate(pid, %{host: host, port: port, auth: auth}=state) do
+    case Redlock.Command.authenticate(pid, auth) do
+      {:ok, _val} ->
+        {:noreply, %{state| redix: pid, reconnection_attempts: 0}}
+
+      other ->
+        Logger.warn "<Redlock:ConnectionKeeper:#{host}:#{port}> failed to authenticate: #{inspect other}"
+        Redix.stop(pid)
+        {:noreply, %{state| redix: nil}}
+    end
   end
 
   defp install_script(pid, %{host: host, port: port}=state) do
