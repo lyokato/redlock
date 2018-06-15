@@ -148,6 +148,7 @@ defmodule Redlock.Supervisor do
 
     host = Keyword.fetch!(opts, :host)
     port = Keyword.get(opts, :port, @default_port)
+    auth = Keyword.get(opts, :auth, nil)
 
     interval_base =
       Keyword.get(opts,
@@ -166,6 +167,7 @@ defmodule Redlock.Supervisor do
                       [[name:                       name,
                         host:                       host,
                         port:                       port,
+                        auth:                       auth,
                         pool_name:                  pool_name,
                         reconnection_interval_base: interval_base,
                         reconnection_interval_max:  interval_max,

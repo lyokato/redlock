@@ -30,7 +30,7 @@ defmodule Redlock.Command do
   end
 
   def lock(redix, resource, value, ttl) do
-    case Redix.command(redix, ["SET", resource, value, "NX", "PX", ttl * 1000]) do
+    case Redix.command(redix, ["SET", resource, value, "NX", "PX", ttl]) do
 
       {:ok, "OK"} -> :ok
 
@@ -46,6 +46,10 @@ defmodule Redlock.Command do
 
   def unlock(redix, resource, value) do
     Redix.command(redix, ["EVALSHA", helper_hash(), 1, resource, value])
+  end
+
+  def authenticate(redix, pwd) do
+    Redix.command(redix, ["AUTH", pwd])
   end
 
 end
