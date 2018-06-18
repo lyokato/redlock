@@ -31,15 +31,22 @@ defmodule Redlock.ConnectionKeeper do
     {:ok, new(opts)}
   end
 
-  def handle_info(:connect, %{host: host, port: port, auth: auth, reconnection_attempts: attempts}=state) do
+  def handle_info(:connect, %{host: host, port: port, reconnection_attempts: attempts}=state) do
     case Redix.start_link([host: host, port: port],
                           [sync_connect: true, exit_on_disconnection: true]) do
       {:ok, pid} ->
         if FastGlobal.get(:redlock_conf).show_debug_logs do
           Logger.debug "<Redlock.ConnectionKeeper:#{host}:#{port}> connected to Redis"
         end
-        auth && authenticate(pid, state)
-        install_script(pid, state)
+
+        with :ok <- authenticate(pid, state),
+             :ok <- install_script(pid, state) do
+          {:noreply, %{state| redix: pid, reconnection_attempts: 0}}
+        else
+          :error ->
+            Redix.stop(pid)
+            {:noreply, %{state| redix: nil}}
+        end
 
       other ->
         Logger.error "<Redlock.ConnectionKeeper:#{host}:#{port}> failed to connect, try to re-connect after interval: #{inspect other}"
@@ -103,28 +110,25 @@ defmodule Redlock.ConnectionKeeper do
                               state.reconnection_attempts)
   end
 
-  defp authenticate(pid, %{host: host, port: port, auth: auth}=state) do
+  defp authenticate(_pid, %{auth: nil}), do: :ok
+  defp authenticate(pid, %{host: host, port: port, auth: auth}) do
     case Redlock.Command.authenticate(pid, auth) do
       {:ok, _val} ->
-        {:noreply, %{state| redix: pid, reconnection_attempts: 0}}
-
+        :ok
       other ->
         Logger.warn "<Redlock:ConnectionKeeper:#{host}:#{port}> failed to authenticate: #{inspect other}"
-        Redix.stop(pid)
-        {:noreply, %{state| redix: nil}}
+        :error
     end
   end
 
-  defp install_script(pid, %{host: host, port: port}=state) do
+  defp install_script(pid, %{host: host, port: port}) do
     case Redlock.Command.install_script(pid) do
-
       {:ok, _val} ->
-        {:noreply, %{state| redix: pid, reconnection_attempts: 0}}
+        :ok
 
       other ->
         Logger.warn "<Redlock:ConnectionKeeper:#{host}:#{port}> failed to install script: #{inspect other}"
-        Redix.stop(pid)
-        {:noreply, %{state| redix: nil}}
+        :error
     end
   end
 
