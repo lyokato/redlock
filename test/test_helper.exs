@@ -8,7 +8,7 @@ redlock_conf = [
   reconnection_interval_base: 300,
   reconnection_interval_max: 3000,
   servers: [
-    [host: "127.0.0.1", port: 6379],
+    [host: "127.0.0.1", port: 6379, database: 5],
   ]
 ]
 

@@ -40,7 +40,7 @@ defmodule RedlockTest do
     key = "bar"
 
     # this lock automatically expired in 1 seconds.
-    {:ok, mutex} = Redlock.lock(key, 1)
+    {:ok, _mutex} = Redlock.lock(key, 1)
 
     # try to lock, and do some retry internally.
     # the retry-configuration has enough interval.
