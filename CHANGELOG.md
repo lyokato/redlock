@@ -1,7 +1,7 @@
 # Change Log
 
-## [1.0.3] - 2018/08/15
+## [1.0.4] - 2018/09/06
 
 ### CHANGED
 
-- Updated ex_hash_ring version https://github.com/lyokato/redlock/pull/25
+- adds 'database' config param(https://github.com/lyokato/redlock/pull/26). Thanks to geofflane.

@@ -6,6 +6,7 @@ defmodule Redlock.Supervisor do
   # default Connection options
   @default_pool_size 2
   @default_port 6379
+  @default_database nil
   @default_retry_interval_base 300
   @default_retry_interval_max 3_000
   @default_reconnection_interval_base 300
@@ -149,6 +150,7 @@ defmodule Redlock.Supervisor do
     host = Keyword.fetch!(opts, :host)
     port = Keyword.get(opts, :port, @default_port)
     auth = Keyword.get(opts, :auth, nil)
+    database = Keyword.get(opts, :database, @default_database)
 
     interval_base =
       Keyword.get(opts,
@@ -167,6 +169,7 @@ defmodule Redlock.Supervisor do
                       [[name:                       name,
                         host:                       host,
                         port:                       port,
+                        database:                   database,
                         auth:                       auth,
                         pool_name:                  pool_name,
                         reconnection_interval_base: interval_base,
