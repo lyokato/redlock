@@ -21,7 +21,7 @@ defmodule Redlock.Mixfile do
   defp deps do
     [
       {:ex_doc, "~> 0.15", only: :dev, runtime: false},
-      {:redix, ">= 0.6.1"},
+      {:redix, "~> 0.8.1"},
       {:poolboy, "~> 1.5"},
       {:fastglobal, "~> 1.0.0"},
       {:ex_hash_ring, "~> 3.0"},
