@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.0.6] - 2018/11/13
+
+### CHANGED
+
+- Dyalyzer and test fixed(https://github.com/lyokato/redlock/pull/29). Thanks to bernardd
+
 ## [1.0.5] - 2018/09/21
 
 ### CHANGED
