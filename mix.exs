@@ -20,6 +20,7 @@ defmodule Redlock.Mixfile do
 
   defp deps do
     [
+      {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.15", only: :dev, runtime: false},
       {:redix, "~> 0.8.1"},
       {:poolboy, "~> 1.5"},
