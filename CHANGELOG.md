@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.0.7] - 2019/02/25
+
+### CHANGED
+
+- add SSL support(https://github.com/lyokato/redlock/pull/30). Thanks to bernardd
+
 ## [1.0.6] - 2018/11/13
 
 ### CHANGED
