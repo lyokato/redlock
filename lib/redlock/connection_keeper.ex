@@ -2,6 +2,7 @@ defmodule Redlock.ConnectionKeeper do
 
   @default_port 6379
   @default_database nil
+  @default_ssl false
   @default_reconnection_interval_base 500
   @default_reconnection_interval_max  5_000
 
@@ -16,6 +17,7 @@ defmodule Redlock.ConnectionKeeper do
 
   defstruct host: "",
             port: nil,
+            ssl: false,
             database: nil,
             redix: nil,
             auth: nil,
@@ -33,8 +35,8 @@ defmodule Redlock.ConnectionKeeper do
     {:ok, new(opts)}
   end
 
-  def handle_info(:connect, %{host: host, port: port, database: database, reconnection_attempts: attempts}=state) do
-    case Redix.start_link(host: host, port: port, database: database,
+  def handle_info(:connect, %{host: host, port: port, ssl: ssl, database: database, reconnection_attempts: attempts}=state) do
+    case Redix.start_link(host: host, port: port, ssl: ssl, database: database,
                           sync_connect: true, exit_on_disconnection: true) do
       {:ok, pid} ->
         if FastGlobal.get(:redlock_conf).show_debug_logs do
@@ -84,6 +86,7 @@ defmodule Redlock.ConnectionKeeper do
     port = Keyword.get(opts, :port, @default_port)
     database = Keyword.get(opts, :database, @default_database)
     auth = Keyword.get(opts, :auth)
+    ssl = Keyword.get(opts, :ssl, @default_ssl)
 
     reconnection_interval_base =
       Keyword.get(opts,
@@ -98,6 +101,7 @@ defmodule Redlock.ConnectionKeeper do
     %__MODULE__{
       host:                       host,
       port:                       port,
+      ssl:                        ssl,
       database:                   database,
       auth:                       auth,
       redix:                      nil,
