@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.0.9] - 2019/02/26
+
+### CHANGED
+
+- Fix authentication(https://github.com/lyokato/redlock/pull/32). Thanks to bernardd
+
 ## [1.0.8] - 2019/02/25
 
 ### CHANGED
