@@ -35,16 +35,18 @@ defmodule Redlock.ConnectionKeeper do
     {:ok, new(opts)}
   end
 
-  def handle_info(:connect, %{host: host, port: port, ssl: ssl, database: database, reconnection_attempts: attempts}=state) do
+  def handle_info(:connect, %{host: host, port: port, ssl: ssl, auth: auth,
+                              database: database,
+                              reconnection_attempts: attempts}=state) do
     case Redix.start_link(host: host, port: port, ssl: ssl, database: database,
-                          sync_connect: true, exit_on_disconnection: true) do
+                          password: auth, sync_connect: true,
+                          exit_on_disconnection: true) do
       {:ok, pid} ->
         if FastGlobal.get(:redlock_conf).show_debug_logs do
           Logger.debug "<Redlock.ConnectionKeeper:#{host}:#{port}> connected to Redis"
         end
 
-        with :ok <- authenticate(pid, state),
-             :ok <- install_script(pid, state) do
+        with :ok <- install_script(pid, state) do
           {:noreply, %{state| redix: pid, reconnection_attempts: 0}}
         else
           :error ->
@@ -116,17 +118,6 @@ defmodule Redlock.ConnectionKeeper do
     Redlock.Util.calc_backoff(state.reconnection_interval_base,
                               state.reconnection_interval_max,
                               state.reconnection_attempts)
-  end
-
-  defp authenticate(_pid, %{auth: nil}), do: :ok
-  defp authenticate(pid, %{host: host, port: port, auth: auth}) do
-    case Redlock.Command.authenticate(pid, auth) do
-      {:ok, _val} ->
-        :ok
-      other ->
-        Logger.warn "<Redlock:ConnectionKeeper:#{host}:#{port}> failed to authenticate: #{inspect other}"
-        :error
-    end
   end
 
   defp install_script(pid, %{host: host, port: port}) do
