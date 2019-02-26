@@ -47,9 +47,4 @@ defmodule Redlock.Command do
   def unlock(redix, resource, value) do
     Redix.command(redix, ["EVALSHA", helper_hash(), to_string(1), resource, value])
   end
-
-  def authenticate(redix, pwd) do
-    Redix.command(redix, ["AUTH", pwd])
-  end
-
 end
