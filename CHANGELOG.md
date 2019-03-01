@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.0.10] - 2019/03/01
+
+### CHANGED
+
+- Fix :milliseconds -> :millisecond (https://github.com/lyokato/redlock/pull/33). Thanks to parallel588
+
 ## [1.0.9] - 2019/02/26
 
 ### CHANGED
