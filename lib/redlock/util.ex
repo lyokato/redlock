@@ -5,7 +5,7 @@ defmodule Redlock.Util do
   end
 
   def now() do
-    System.system_time(:milliseconds)
+    System.system_time(:millisecond)
   end
 
   def calc_backoff(base_ms, max_ms, attempt_counts) do
