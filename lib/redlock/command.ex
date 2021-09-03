@@ -1,5 +1,4 @@
 defmodule Redlock.Command do
-
   require Logger
 
   @helper_script ~S"""
@@ -11,12 +10,11 @@ defmodule Redlock.Command do
   """
 
   def helper_hash() do
-    :crypto.hash(:sha, @helper_script) |> Base.encode16 |> String.downcase
+    :crypto.hash(:sha, @helper_script) |> Base.encode16() |> String.downcase()
   end
 
   def install_script(redix) do
     case Redix.command(redix, ["SCRIPT", "LOAD", @helper_script]) do
-
       {:ok, val} ->
         if val == helper_hash() do
           {:ok, val}
@@ -24,22 +22,22 @@ defmodule Redlock.Command do
           {:error, :hash_mismatch}
         end
 
-      other -> other
-
+      other ->
+        other
     end
   end
 
   def lock(redix, resource, value, ttl) do
     case Redix.command(redix, ["SET", resource, value, "NX", "PX", to_string(ttl)]) do
-
-      {:ok, "OK"} -> :ok
+      {:ok, "OK"} ->
+        :ok
 
       {:ok, nil} ->
-        Logger.info "<Redlock> resource:#{resource} is already locked"
+        Logger.info("<Redlock> resource:#{resource} is already locked")
         {:error, :already_locked}
 
       other ->
-        Logger.error "<Redlock> failed to execute redis SET: #{inspect other}"
+        Logger.error("<Redlock> failed to execute redis SET: #{inspect(other)}")
         {:error, :system_error}
     end
   end

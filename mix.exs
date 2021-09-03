@@ -4,10 +4,10 @@ defmodule Redlock.Mixfile do
   def project do
     [
       app: :redlock,
-      version: "1.0.14",
+      version: "1.0.15",
       elixir: "~> 1.5",
       package: package(),
-      start_permanent: Mix.env == :prod,
+      start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
   end
@@ -36,7 +36,7 @@ defmodule Redlock.Mixfile do
       licenses: ["MIT"],
       links: %{
         "Github" => "https://github.com/lyokato/redlock",
-        "Docs"   => "https://hexdocs.pm/redlock"
+        "Docs" => "https://hexdocs.pm/redlock"
       },
       maintainers: ["Lyo Kato"]
     ]

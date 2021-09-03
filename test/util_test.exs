@@ -1,5 +1,4 @@
 defmodule Redlock.UtilTest do
-
   use ExUnit.Case
 
   alias Redlock.Util
@@ -13,5 +12,4 @@ defmodule Redlock.UtilTest do
       assert is_number(Util.calc_backoff(base_ms, max_ms, attempt_counts))
     end
   end
-
 end
