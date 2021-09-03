@@ -1,5 +1,4 @@
 defmodule Redlock do
-
   @moduledoc ~S"""
   This library is an implementation of Redlock (Redis destributed lock)
 
@@ -147,7 +146,6 @@ defmodule Redlock do
 
   def transaction(resource, ttl, callback) do
     case Redlock.Executor.lock(resource, ttl) do
-
       {:ok, mutex} ->
         try do
           callback.()
@@ -157,7 +155,6 @@ defmodule Redlock do
 
       :error ->
         {:error, :lock_failure}
-
     end
   end
 
@@ -168,5 +165,4 @@ defmodule Redlock do
   def unlock(resource, value) do
     Redlock.Executor.unlock(resource, value)
   end
-
 end

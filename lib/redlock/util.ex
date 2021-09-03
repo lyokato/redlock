@@ -1,5 +1,4 @@
 defmodule Redlock.Util do
-
   @max_attempt_counts 1000
 
   def random_value() do
@@ -15,12 +14,11 @@ defmodule Redlock.Util do
     safe_attempt_counts = min(@max_attempt_counts, attempt_counts)
 
     max =
-      base_ms * :math.pow(2, safe_attempt_counts)
+      (base_ms * :math.pow(2, safe_attempt_counts))
       |> min(max_ms)
       |> trunc
       |> max(base_ms + 1)
 
     :rand.uniform(max - base_ms) + base_ms
   end
-
 end

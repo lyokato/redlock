@@ -1,5 +1,4 @@
 defmodule Redlock.NodeChooser.Store.SingleNode do
-
   @behaviour Redlock.NodeChooser.Store
 
   @impl true
@@ -11,6 +10,4 @@ defmodule Redlock.NodeChooser.Store.SingleNode do
   def choose(store, _key) do
     store
   end
-
 end
-
