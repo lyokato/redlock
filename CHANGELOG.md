@@ -1,12 +1,16 @@
 # Change Log
 
-## [1.0.13] - 2021/08/21
-
-- Avoid max.pow to overflow with values >= 1016 (https://github.com/lyokato/redlock/pull/35). Thanks to carrascoacd
+## [1.0.14] - 2021/09/03
 
 ### CHANGED
 
-- Upgrade redix to 0.10.7 (https://github.com/lyokato/redlock/pull/34). Thanks to carrascoacd
+- Bump redix to 1.1.0 (https://github.com/lyokato/redlock/pull/36). Thanks to carrascoacd
+
+## [1.0.13] - 2021/08/21
+
+### CHANGED
+
+- Avoid max.pow to overflow with values >= 1016 (https://github.com/lyokato/redlock/pull/35). Thanks to carrascoacd
 
 ## [1.0.12] - 2020/03/14
 
