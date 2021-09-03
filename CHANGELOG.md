@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.0.15] - 2021/09/03
+
+### CHANGED
+
+- adds formatter
+- removes warnings for deprecated supervisor() spec definition
+
 ## [1.0.14] - 2021/09/03
 
 ### CHANGED
