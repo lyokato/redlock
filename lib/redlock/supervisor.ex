@@ -167,23 +167,18 @@ defmodule Redlock.Supervisor do
     pool_name = Module.concat(Redlock.NodeConnectionPool, "#{host}_#{port}")
 
     {pool_name,
-     supervisor(
-       NodeSupervisor,
-       [
-         [
-           name: name,
-           host: host,
-           port: port,
-           ssl: ssl,
-           database: database,
-           auth: auth,
-           pool_name: pool_name,
-           reconnection_interval_base: interval_base,
-           reconnection_interval_max: interval_max,
-           pool_size: pool_size
-         ]
-       ],
-       id: name
-     )}
+     {NodeSupervisor,
+      [
+        name: name,
+        host: host,
+        port: port,
+        ssl: ssl,
+        database: database,
+        auth: auth,
+        pool_name: pool_name,
+        reconnection_interval_base: interval_base,
+        reconnection_interval_max: interval_max,
+        pool_size: pool_size
+      ]}}
   end
 end

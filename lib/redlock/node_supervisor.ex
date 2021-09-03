@@ -2,6 +2,17 @@ defmodule Redlock.NodeSupervisor do
   use Supervisor
   require Logger
 
+  @spec child_spec(Keyword.t()) :: Supervisor.child_spec()
+  def child_spec(opts) do
+    name = Keyword.fetch!(opts, :name)
+
+    %{
+      id: name,
+      start: {__MODULE__, :start_link, [opts]},
+      type: :supervisor
+    }
+  end
+
   def start_link(opts) do
     name = Keyword.fetch!(opts, :name)
     Supervisor.start_link(__MODULE__, opts, name: name)
