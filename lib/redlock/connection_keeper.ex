@@ -69,9 +69,7 @@ defmodule Redlock.ConnectionKeeper do
 
       other ->
         Logger.error(
-          "<Redlock.ConnectionKeeper:#{host}:#{port}> failed to connect, try to re-connect after interval: #{
-            inspect(other)
-          }"
+          "<Redlock.ConnectionKeeper:#{host}:#{port}> failed to connect, try to re-connect after interval: #{inspect(other)}"
         )
 
         Process.send_after(self(), :connect, calc_backoff(state))
