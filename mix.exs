@@ -1,14 +1,17 @@
 defmodule Redlock.Mixfile do
   use Mix.Project
 
+  @version "1.0.15"
+
   def project do
     [
       app: :redlock,
-      version: "1.0.15",
       elixir: "~> 1.5",
+      version: @version,
       package: package(),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      docs: docs()
     ]
   end
 
@@ -27,6 +30,22 @@ defmodule Redlock.Mixfile do
       {:fastglobal, "~> 1.0.0"},
       {:ex_hash_ring, "~> 3.0"},
       {:secure_random, "~> 0.5.1"}
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      extras: docs_extras(),
+      source_ref: "v#{@version}",
+      source_url: "https://github.com/lyokato/redlock"
+    ]
+  end
+
+  defp docs_extras do
+    [
+      "README.md": [title: "Readme"],
+      "CHANGELOG.md": [title: "Changelog"]
     ]
   end
 
