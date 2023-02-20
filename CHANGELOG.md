@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.0.16] - 2023/02/20
+
+- Updates dependencies (https://github.com/lyokato/redlock/pull/37). Thanks to warmwaffles.
+
+### CHANGED
+
+- adds formatter
+- removes warnings for deprecated supervisor() spec definition
+
 ## [1.0.15] - 2021/09/03
 
 ### CHANGED
