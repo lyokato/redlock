@@ -1,0 +1,73 @@
+name: Main
+
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  lint:
+    runs-on: ${{ matrix.os }}
+    env:
+      MIX_ENV: dev
+    name: Lint
+    strategy:
+      matrix:
+        os: ["ubuntu-20.04"]
+        elixir: ["1.14"]
+        otp: ["25"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.otp }}
+          elixir-version: ${{ matrix.elixir }}
+      - uses: actions/cache@v3
+        with:
+          path: deps
+          key: ${{ matrix.os }}-otp_${{ matrix.otp }}-elixir_${{ matrix.elixir }}-mix_${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ matrix.os }}-otp_${{ matrix.otp }}-elixir_${{ matrix.elixir }}-mix_
+      - run: mix deps.get
+      - run: mix deps.compile
+      - run: mix format --check-formatted
+      - run: mix deps.unlock --check-unused
+
+  test:
+    runs-on: ${{ matrix.os }}
+    env:
+      MIX_ENV: test
+    name: Test Elixir ${{ matrix.elixir }}, OTP ${{ matrix.otp }}, OS ${{ matrix.os }}
+    services:
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-20.04"]
+        elixir: ["1.14", "1.13", "1.12"]
+        otp: ["25", "24", "23"]
+        exclude:
+          - elixir: "1.12"
+            otp: "25"
+    steps:
+      - uses: actions/checkout@v3
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.otp }}
+          elixir-version: ${{ matrix.elixir }}
+      - uses: egor-tensin/vs-shell@v2
+        if: runner.os == 'Windows'
+      - uses: actions/cache@v3
+        with:
+          path: deps
+          key: ${{ matrix.os }}-otp_${{ matrix.otp }}-elixir_${{ matrix.elixir }}-mix_${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ matrix.os }}-otp_${{ matrix.otp }}-elixir_${{ matrix.elixir }}-mix_
+      - run: mix deps.get --only test
+      - run: mix deps.compile
+      - run: mix compile
+      - run: mix test
