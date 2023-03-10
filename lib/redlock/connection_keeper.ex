@@ -59,7 +59,7 @@ defmodule Redlock.ConnectionKeeper do
           Logger.debug("<Redlock.ConnectionKeeper:#{host}:#{port}> connected to Redis")
         end
 
-        with :ok <- install_script(pid, state) do
+        with :ok <- install_scripts(pid, state) do
           {:noreply, %{state | redix: pid, reconnection_attempts: 0}}
         else
           :error ->
@@ -145,14 +145,14 @@ defmodule Redlock.ConnectionKeeper do
     )
   end
 
-  defp install_script(pid, %{host: host, port: port}) do
-    case Redlock.Command.install_script(pid) do
-      {:ok, _val} ->
+  defp install_scripts(pid, %{host: host, port: port}) do
+    case Redlock.Command.install_scripts(pid) do
+      {:ok, _unlock_val, _extend_val} ->
         :ok
 
       other ->
         Logger.warn(
-          "<Redlock:ConnectionKeeper:#{host}:#{port}> failed to install script: #{inspect(other)}"
+          "<Redlock:ConnectionKeeper:#{host}:#{port}> failed to install scripts: #{inspect(other)}"
         )
 
         :error

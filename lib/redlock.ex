@@ -165,4 +165,8 @@ defmodule Redlock do
   def unlock(resource, value) do
     Redlock.Executor.unlock(resource, value)
   end
+
+  def extend(resource, value, ttl) do
+    Redlock.Executor.extend(resource, value, ttl)
+  end
 end
