@@ -1,7 +1,7 @@
 defmodule Redlock.Command do
   require Logger
 
-  @helper_script ~S"""
+  @unlock_script ~S"""
   if redis.call("get",KEYS[1]) == ARGV[1] then
     return redis.call("del",KEYS[1])
   else
@@ -9,21 +9,32 @@ defmodule Redlock.Command do
   end
   """
 
-  def helper_hash() do
-    :crypto.hash(:sha, @helper_script) |> Base.encode16() |> String.downcase()
+  @extend_script ~S"""
+  if redis.call("get",KEYS[1]) == ARGV[1] then
+    return redis.call("pexpire",KEYS[1],ARGV[2],"GT")
+  else
+    return redis.error_reply('NOT LOCKED')
+  end
+  """
+
+  def unlock_hash() do
+    :crypto.hash(:sha, @unlock_script) |> Base.encode16() |> String.downcase()
   end
 
-  def install_script(redix) do
-    case Redix.command(redix, ["SCRIPT", "LOAD", @helper_script]) do
-      {:ok, val} ->
-        if val == helper_hash() do
-          {:ok, val}
-        else
-          {:error, :hash_mismatch}
-        end
+  def extend_hash() do
+    :crypto.hash(:sha, @extend_script) |> Base.encode16() |> String.downcase()
+  end
 
-      other ->
-        other
+  def install_scripts(redix) do
+    with {:ok, unlock_val} <- Redix.command(redix, ["SCRIPT", "LOAD", @unlock_script]),
+         {:ok, extend_val} <- Redix.command(redix, ["SCRIPT", "LOAD", @extend_script]) do
+      if unlock_val == unlock_hash() and extend_val == extend_hash() do
+        {:ok, unlock_val, extend_val}
+      else
+        {:error, :hash_mismatch}
+      end
+    else
+      error -> error
     end
   end
 
@@ -43,6 +54,17 @@ defmodule Redlock.Command do
   end
 
   def unlock(redix, resource, value) do
-    Redix.command(redix, ["EVALSHA", helper_hash(), to_string(1), resource, value])
+    Redix.command(redix, ["EVALSHA", unlock_hash(), to_string(1), resource, value])
+  end
+
+  def extend(redix, resource, value, ttl) do
+    case Redix.command(redix, ["EVALSHA", extend_hash(), to_string(1), resource, value, ttl]) do
+      {:ok, _} ->
+        :ok
+
+      other ->
+        Logger.info("<Redlock> Unable to extend resource: #{resource}. #{inspect(other)}")
+        {:error, :cannot_extend}
+    end
   end
 end
