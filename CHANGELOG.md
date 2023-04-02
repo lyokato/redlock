@@ -1,5 +1,11 @@
 # Change Log
 
+https://github.com/lyokato/redlock/pull/39
+
+## [1.0.17] - 2023/04/02
+
+- Add extend functionality (https://github.com/lyokato/redlock/pull/39). Thanks to colin-nl.
+
 ## [1.0.16] - 2023/02/20
 
 - Updates dependencies (https://github.com/lyokato/redlock/pull/37). Thanks to warmwaffles.
