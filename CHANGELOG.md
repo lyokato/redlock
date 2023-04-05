@@ -1,19 +1,22 @@
 # Change Log
 
-https://github.com/lyokato/redlock/pull/39
+## [1.0.18] - 2023/04/05
+
+### CHANGED
+
+- Allow passing socket opts + improve retry logic (https://github.com/lyokato/redlock/pull/40). Thanks to colin-nl.
 
 ## [1.0.17] - 2023/04/02
+
+### CHANGED
 
 - Add extend functionality (https://github.com/lyokato/redlock/pull/39). Thanks to colin-nl.
 
 ## [1.0.16] - 2023/02/20
 
-- Updates dependencies (https://github.com/lyokato/redlock/pull/37). Thanks to warmwaffles.
-
 ### CHANGED
 
-- adds formatter
-- removes warnings for deprecated supervisor() spec definition
+- Updates dependencies (https://github.com/lyokato/redlock/pull/37). Thanks to warmwaffles.
 
 ## [1.0.15] - 2021/09/03
 
