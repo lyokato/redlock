@@ -2,6 +2,7 @@ defmodule Redlock.ConnectionKeeper do
   @default_port 6379
   @default_database nil
   @default_ssl false
+  @default_socket_opts []
   @default_reconnection_interval_base 500
   @default_reconnection_interval_max 5_000
 
@@ -20,6 +21,7 @@ defmodule Redlock.ConnectionKeeper do
             database: nil,
             redix: nil,
             auth: nil,
+            socket_opts: nil,
             reconnection_interval_base: 0,
             reconnection_interval_max: 0,
             reconnection_attempts: 0
@@ -42,6 +44,7 @@ defmodule Redlock.ConnectionKeeper do
           ssl: ssl,
           auth: auth,
           database: database,
+          socket_opts: socket_opts,
           reconnection_attempts: attempts
         } = state
       ) do
@@ -51,6 +54,7 @@ defmodule Redlock.ConnectionKeeper do
            ssl: ssl,
            database: database,
            password: auth,
+           socket_opts: socket_opts,
            sync_connect: true,
            exit_on_disconnection: true
          ) do
@@ -109,6 +113,7 @@ defmodule Redlock.ConnectionKeeper do
     database = Keyword.get(opts, :database, @default_database)
     auth = Keyword.get(opts, :auth)
     ssl = Keyword.get(opts, :ssl, @default_ssl)
+    socket_opts = Keyword.get(opts, :socket_opts, @default_socket_opts)
 
     reconnection_interval_base =
       Keyword.get(
@@ -130,6 +135,7 @@ defmodule Redlock.ConnectionKeeper do
       ssl: ssl,
       database: database,
       auth: auth,
+      socket_opts: socket_opts,
       redix: nil,
       reconnection_attempts: 0,
       reconnection_interval_base: reconnection_interval_base,
