@@ -37,13 +37,7 @@ defmodule Redlock.Executor do
     do_extend(resource, value, ttl, FastGlobal.get(:redlock_conf))
   end
 
-  defp do_lock(resource, _ttl, _value, retry, %{max_retry: max_retry})
-       when retry >= max_retry do
-    Logger.warn("<Redlock> failed to lock resource eventually: #{resource}")
-    :error
-  end
-
-  defp do_lock(resource, ttl, value, attempts, config) do
+  defp do_lock(resource, ttl, value, attempts, %{max_retry: max_retry} = config) do
     {number_of_success, quorum, validity} =
       lock_helper("lock", &lock_on_node/4, resource, value, ttl, config)
 
@@ -55,13 +49,18 @@ defmodule Redlock.Executor do
 
       {:ok, value}
     else
-      Logger.info("<Redlock> failed to lock '#{resource}', retry after interval")
-      calc_backoff(config, attempts) |> Process.sleep()
-      do_lock(resource, ttl, value, attempts + 1, config)
+      if attempts < max_retry do
+        Logger.info("<Redlock> failed to lock '#{resource}', retry after interval")
+        calc_backoff(config, attempts) |> Process.sleep()
+        do_lock(resource, ttl, value, attempts + 1, config)
+      else
+        Logger.warn("<Redlock> failed to lock resource eventually: #{resource}")
+        :error
+      end
     end
   end
 
-  def do_extend(resource, value, ttl, config) do
+  defp do_extend(resource, value, ttl, config) do
     {number_of_success, quorum, validity} =
       lock_helper("extend", &extend_on_node/4, resource, value, ttl, config)
 

@@ -25,15 +25,38 @@ defmodule Redlock.NodeSupervisor do
     ssl = Keyword.fetch!(opts, :ssl)
     database = Keyword.fetch!(opts, :database)
     auth = Keyword.fetch!(opts, :auth)
+    socket_opts = Keyword.fetch!(opts, :socket_opts)
     interval_base = Keyword.fetch!(opts, :reconnection_interval_base)
     interval_max = Keyword.fetch!(opts, :reconnection_interval_max)
     size = Keyword.fetch!(opts, :pool_size)
 
-    children(name, host, port, ssl, database, auth, interval_base, interval_max, size)
+    children(
+      name,
+      host,
+      port,
+      ssl,
+      database,
+      auth,
+      socket_opts,
+      interval_base,
+      interval_max,
+      size
+    )
     |> Supervisor.init(strategy: :one_for_one)
   end
 
-  defp children(name, host, port, ssl, database, auth, interval_base, interval_max, size) do
+  defp children(
+         name,
+         host,
+         port,
+         ssl,
+         database,
+         auth,
+         socket_opts,
+         interval_base,
+         interval_max,
+         size
+       ) do
     [
       :poolboy.child_spec(
         name,
@@ -43,6 +66,7 @@ defmodule Redlock.NodeSupervisor do
         ssl: ssl,
         database: database,
         auth: auth,
+        socket_opts: socket_opts,
         reconnection_interval_base: interval_base,
         reconnection_interval_max: interval_max
       )
