@@ -6,9 +6,9 @@ defmodule Redlock.ConnectionKeeper do
   @default_reconnection_interval_base 500
   @default_reconnection_interval_max 5_000
 
-  require Logger
-
   use GenServer
+
+  import Redlock.Util, only: [log: 3]
 
   @spec connection(pid) :: {:ok, pid} | {:error, :not_found}
   def connection(pid) do
@@ -48,6 +48,8 @@ defmodule Redlock.ConnectionKeeper do
           reconnection_attempts: attempts
         } = state
       ) do
+    log_level = FastGlobal.get(:redlock_conf).log_level
+
     case Redix.start_link(
            host: host,
            port: port,
@@ -59,9 +61,7 @@ defmodule Redlock.ConnectionKeeper do
            exit_on_disconnection: true
          ) do
       {:ok, pid} ->
-        if FastGlobal.get(:redlock_conf).show_debug_logs do
-          Logger.debug("<Redlock.ConnectionKeeper:#{host}:#{port}> connected to Redis")
-        end
+        log(log_level, "debug", "<Redlock.ConnectionKeeper:#{host}:#{port}> connected to Redis")
 
         with :ok <- install_scripts(pid, state) do
           {:noreply, %{state | redix: pid, reconnection_attempts: 0}}
@@ -72,7 +72,9 @@ defmodule Redlock.ConnectionKeeper do
         end
 
       other ->
-        Logger.error(
+        log(
+          log_level,
+          "error",
           "<Redlock.ConnectionKeeper:#{host}:#{port}> failed to connect, try to re-connect after interval: #{inspect(other)}"
         )
 
@@ -85,7 +87,9 @@ defmodule Redlock.ConnectionKeeper do
         {:EXIT, pid, _reason},
         %{host: host, port: port, redix: pid, reconnection_attempts: attempts} = state
       ) do
-    Logger.error(
+    log(
+      FastGlobal.get(:redlock_conf).log_level,
+      "error",
       "<Redlock.ConnectionKeeper:#{host}:#{port}> seems to be disconnected, try to re-connect"
     )
 
@@ -157,7 +161,9 @@ defmodule Redlock.ConnectionKeeper do
         :ok
 
       other ->
-        Logger.warn(
+        log(
+          FastGlobal.get(:redlock_conf).log_level,
+          "warning",
           "<Redlock:ConnectionKeeper:#{host}:#{port}> failed to install scripts: #{inspect(other)}"
         )
 

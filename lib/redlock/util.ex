@@ -1,4 +1,6 @@
 defmodule Redlock.Util do
+  require Logger
+
   @max_attempt_counts 1000
 
   def random_value() do
@@ -21,4 +23,15 @@ defmodule Redlock.Util do
 
     :rand.uniform(max - base_ms) + base_ms
   end
+
+  def log(_level, "error", msg), do: Logger.error(msg)
+
+  def log(level, "warning", msg) when level in ["debug", "info", "warning"],
+    do: Logger.warning(msg)
+
+  def log(level, "info", msg) when level in ["debug", "info"], do: Logger.info(msg)
+
+  def log("debug", "debug", msg), do: Logger.debug(msg)
+
+  def log(_config_level, _log_level, _msg), do: :ok
 end

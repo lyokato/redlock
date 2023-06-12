@@ -9,7 +9,8 @@ redlock_conf = [
   reconnection_interval_max: 3000,
   servers: [
     [host: "127.0.0.1", port: 6379, database: 5]
-  ]
+  ],
+  log_level: "info"
 ]
 
 Supervisor.start_link(
