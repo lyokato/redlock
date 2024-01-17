@@ -17,7 +17,7 @@ defmodule Redlock.Mixfile do
 
   def application do
     [
-      extra_applications: [:logger, :secure_random, :redix, :poolboy, :ex_hash_ring]
+      extra_applications: [:logger, :redix, :poolboy, :ex_hash_ring]
     ]
   end
 
@@ -28,8 +28,7 @@ defmodule Redlock.Mixfile do
       {:redix, "~> 1.2"},
       {:poolboy, "~> 1.5"},
       {:fastglobal, "~> 1.0.0"},
-      {:ex_hash_ring, "~> 3.0"},
-      {:secure_random, "~> 0.5.1"}
+      {:ex_hash_ring, "~> 3.0"}
     ]
   end
 
