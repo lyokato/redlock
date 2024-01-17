@@ -54,7 +54,7 @@ defmodule Redlock.Executor do
         calc_backoff(config, attempts) |> Process.sleep()
         do_lock(resource, ttl, value, attempts + 1, config)
       else
-        Logger.warn("<Redlock> failed to lock resource eventually: #{resource}")
+        Logger.warning("<Redlock> failed to lock resource eventually: #{resource}")
         :error
       end
     end
@@ -72,7 +72,7 @@ defmodule Redlock.Executor do
 
       :ok
     else
-      Logger.warn("<Redlock> failed to extend lock resource: #{resource}")
+      Logger.warning("<Redlock> failed to extend lock resource: #{resource}")
       :error
     end
   end
@@ -128,7 +128,7 @@ defmodule Redlock.Executor do
           Command.lock(redix, resource, value, ttl)
 
         {:error, :not_found} = error ->
-          Logger.warn("<Redlock> connection is currently unavailable")
+          Logger.warning("<Redlock> connection is currently unavailable")
           error
       end
     end)
@@ -141,7 +141,7 @@ defmodule Redlock.Executor do
           Command.unlock(redix, resource, value)
 
         {:error, :not_found} = error ->
-          Logger.warn("<Redlock> connection is currently unavailable")
+          Logger.warning("<Redlock> connection is currently unavailable")
           error
       end
     end)
@@ -154,7 +154,7 @@ defmodule Redlock.Executor do
           Command.extend(redix, resource, value, ttl)
 
         {:error, :not_found} = error ->
-          Logger.warn("<Redlock> connection is currently unavailable")
+          Logger.warning("<Redlock> connection is currently unavailable")
           error
       end
     end)

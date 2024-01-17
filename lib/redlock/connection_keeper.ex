@@ -157,7 +157,7 @@ defmodule Redlock.ConnectionKeeper do
         :ok
 
       other ->
-        Logger.warn(
+        Logger.warning(
           "<Redlock:ConnectionKeeper:#{host}:#{port}> failed to install scripts: #{inspect(other)}"
         )
 
