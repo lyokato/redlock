@@ -1,5 +1,5 @@
 defmodule Redlock.Command do
-  require Logger
+  import Redlock.Util, only: [log: 3]
 
   @unlock_script ~S"""
   if redis.call("get",KEYS[1]) == ARGV[1] then
@@ -38,17 +38,17 @@ defmodule Redlock.Command do
     end
   end
 
-  def lock(redix, resource, value, ttl) do
+  def lock(redix, resource, value, ttl, config) do
     case Redix.command(redix, ["SET", resource, value, "NX", "PX", to_string(ttl)]) do
       {:ok, "OK"} ->
         :ok
 
       {:ok, nil} ->
-        Logger.info("<Redlock> resource:#{resource} is already locked")
+        log(config.log_level, "info", "<Redlock> resource:#{resource} is already locked")
         {:error, :already_locked}
 
       other ->
-        Logger.error("<Redlock> failed to execute redis SET: #{inspect(other)}")
+        log(config.log_level, "error", "<Redlock> failed to execute redis SET: #{inspect(other)}")
         {:error, :system_error}
     end
   end
@@ -57,13 +57,18 @@ defmodule Redlock.Command do
     Redix.command(redix, ["EVALSHA", unlock_hash(), to_string(1), resource, value])
   end
 
-  def extend(redix, resource, value, ttl) do
+  def extend(redix, resource, value, ttl, config) do
     case Redix.command(redix, ["EVALSHA", extend_hash(), to_string(1), resource, value, ttl]) do
       {:ok, _} ->
         :ok
 
       other ->
-        Logger.info("<Redlock> Unable to extend resource: #{resource}. #{inspect(other)}")
+        log(
+          config.log_level,
+          "info",
+          "<Redlock> Unable to extend resource: #{resource}. #{inspect(other)}"
+        )
+
         {:error, :cannot_extend}
     end
   end

@@ -1,12 +1,12 @@
 defmodule Redlock.Mixfile do
   use Mix.Project
 
-  @version "1.0.18"
+  @version "1.0.19"
 
   def project do
     [
       app: :redlock,
-      elixir: "~> 1.12",
+      elixir: "~> 1.14",
       version: @version,
       package: package(),
       start_permanent: Mix.env() == :prod,
@@ -17,7 +17,7 @@ defmodule Redlock.Mixfile do
 
   def application do
     [
-      extra_applications: [:logger, :secure_random, :redix, :poolboy, :ex_hash_ring]
+      extra_applications: [:logger, :redix, :poolboy, :ex_hash_ring]
     ]
   end
 
@@ -25,11 +25,10 @@ defmodule Redlock.Mixfile do
     [
       {:dialyxir, "~> 1.2.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.29", only: :dev, runtime: false},
-      {:redix, "~> 1.2"},
+      {:redix, "~> 1.3"},
       {:poolboy, "~> 1.5"},
       {:fastglobal, "~> 1.0.0"},
-      {:ex_hash_ring, "~> 3.0"},
-      {:secure_random, "~> 0.5.1"}
+      {:ex_hash_ring, "~> 3.0"}
     ]
   end
 
