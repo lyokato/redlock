@@ -4,7 +4,8 @@ defmodule Redlock.Util do
   @max_attempt_counts 1000
 
   def random_value() do
-    SecureRandom.hex(40)
+    bytes = :crypto.strong_rand_bytes(40)
+    Base.encode16(bytes, case: :lower)
   end
 
   def now() do

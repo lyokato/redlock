@@ -158,6 +158,7 @@ defmodule Redlock.Executor do
           Command.extend(redix, resource, value, ttl, config)
 
         {:error, :not_found} = error ->
+
           log(config.log_level, "warning", "<Redlock> connection is currently unavailable")
           error
       end
