@@ -25,7 +25,7 @@ defmodule Redlock.Mixfile do
     [
       {:dialyxir, "~> 1.2.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.29", only: :dev, runtime: false},
-      {:redix, "~> 1.2"},
+      {:redix, "~> 1.3"},
       {:poolboy, "~> 1.5"},
       {:fastglobal, "~> 1.0.0"},
       {:ex_hash_ring, "~> 3.0"}
