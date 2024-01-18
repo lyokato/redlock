@@ -1,11 +1,9 @@
 defmodule Redlock.Executor do
-  require Logger
+  import Redlock.Util, only: [now: 0, random_value: 0, log: 3]
 
   alias Redlock.Command
   alias Redlock.ConnectionKeeper
   alias Redlock.NodeChooser
-
-  import Redlock.Util, only: [now: 0, random_value: 0]
 
   # TTL = seconds
   def lock(resource, ttl) do
@@ -13,21 +11,27 @@ defmodule Redlock.Executor do
   end
 
   def unlock(resource, value) do
-    debug_logs_enabled = FastGlobal.get(:redlock_conf).show_debug_logs
+    config = FastGlobal.get(:redlock_conf)
 
     NodeChooser.choose(resource)
     |> Enum.each(fn node ->
-      case unlock_on_node(node, resource, value) do
+      case unlock_on_node(node, resource, value, config) do
         {:ok, _} ->
-          debug_log(
-            debug_logs_enabled,
+          log(
+            config.log_level,
+            "debug",
             "<Redlock> unlocked '#{resource}' successfully on node: #{node}"
           )
 
           :ok
 
         {:error, reason} ->
-          Logger.error("<Redlock> failed to execute redis-unlock-command: #{inspect(reason)}")
+          log(
+            config.log_level,
+            "error",
+            "<Redlock> failed to execute redis-unlock-command: #{inspect(reason)}"
+          )
+
           :error
       end
     end)
@@ -39,22 +43,24 @@ defmodule Redlock.Executor do
 
   defp do_lock(resource, ttl, value, attempts, %{max_retry: max_retry} = config) do
     {number_of_success, quorum, validity} =
-      lock_helper("lock", &lock_on_node/4, resource, value, ttl, config)
+      lock_helper("lock", &lock_on_node/5, resource, value, ttl, config)
 
     if number_of_success >= quorum and validity > 0 do
-      debug_log(
-        config.show_debug_logs,
-        "<Redlock> created lock for '#{resource}' successfully"
-      )
+      log(config.log_level, "debug", "<Redlock> created lock for '#{resource}' successfully")
 
       {:ok, value}
     else
       if attempts < max_retry do
-        Logger.info("<Redlock> failed to lock '#{resource}', retry after interval")
+        log(
+          config.log_level,
+          "info",
+          "<Redlock> failed to lock '#{resource}', retry after interval"
+        )
+
         calc_backoff(config, attempts) |> Process.sleep()
         do_lock(resource, ttl, value, attempts + 1, config)
       else
-        Logger.warning("<Redlock> failed to lock resource eventually: #{resource}")
+        log(config.log_level, "info", "<Redlock> failed to lock resource eventually: #{resource}")
         :error
       end
     end
@@ -62,17 +68,13 @@ defmodule Redlock.Executor do
 
   defp do_extend(resource, value, ttl, config) do
     {number_of_success, quorum, validity} =
-      lock_helper("extend", &extend_on_node/4, resource, value, ttl, config)
+      lock_helper("extend", &extend_on_node/5, resource, value, ttl, config)
 
     if number_of_success >= quorum and validity > 0 do
-      debug_log(
-        config.show_debug_logs,
-        "<Redlock> extended lock for '#{resource}' successfully"
-      )
-
+      log(config.log_level, "debug", "<Redlock> extended lock for '#{resource}' successfully")
       :ok
     else
-      Logger.warning("<Redlock> failed to extend lock resource: #{resource}")
+      log(config.log_level, "warning", "<Redlock> failed to extend lock resource: #{resource}")
       :error
     end
   end
@@ -85,10 +87,11 @@ defmodule Redlock.Executor do
     results =
       servers
       |> Enum.map(fn node ->
-        case callback.(node, resource, value, ttl * 1000) do
+        case callback.(node, resource, value, ttl * 1000, config) do
           :ok ->
-            debug_log(
-              config.show_debug_logs,
+            log(
+              config.log_level,
+              "debug",
               "<Redlock> #{action}ed '#{resource}' successfully on node: #{node}, ttl: #{ttl}"
             )
 
@@ -105,8 +108,9 @@ defmodule Redlock.Executor do
     elapsed_time = now() - started_at
     validity = ttl - elapsed_time / 1000.0 - drift
 
-    debug_log(
-      config.show_debug_logs,
+    log(
+      config.log_level,
+      "debug",
       "<Redlock> elapsed-#{elapsed_time} : success-#{number_of_success} : quorum-#{quorum}"
     )
 
@@ -121,45 +125,43 @@ defmodule Redlock.Executor do
     )
   end
 
-  defp lock_on_node(node, resource, value, ttl) do
+  defp lock_on_node(node, resource, value, ttl, config) do
     :poolboy.transaction(node, fn conn_keeper ->
       case ConnectionKeeper.connection(conn_keeper) do
         {:ok, redix} ->
-          Command.lock(redix, resource, value, ttl)
+          Command.lock(redix, resource, value, ttl, config)
 
         {:error, :not_found} = error ->
-          Logger.warning("<Redlock> connection is currently unavailable")
+          log(config.log_level, "warning", "<Redlock> connection is currently unavailable")
           error
       end
     end)
   end
 
-  def unlock_on_node(node, resource, value) do
+  def unlock_on_node(node, resource, value, config) do
     :poolboy.transaction(node, fn conn_keeper ->
       case ConnectionKeeper.connection(conn_keeper) do
         {:ok, redix} ->
           Command.unlock(redix, resource, value)
 
         {:error, :not_found} = error ->
-          Logger.warning("<Redlock> connection is currently unavailable")
+          log(config.log_level, "warning", "<Redlock> connection is currently unavailable")
           error
       end
     end)
   end
 
-  def extend_on_node(node, resource, value, ttl) do
+  def extend_on_node(node, resource, value, ttl, config) do
     :poolboy.transaction(node, fn conn_keeper ->
       case ConnectionKeeper.connection(conn_keeper) do
         {:ok, redix} ->
-          Command.extend(redix, resource, value, ttl)
+          Command.extend(redix, resource, value, ttl, config)
 
         {:error, :not_found} = error ->
-          Logger.warning("<Redlock> connection is currently unavailable")
+
+          log(config.log_level, "warning", "<Redlock> connection is currently unavailable")
           error
       end
     end)
   end
-
-  defp debug_log(false, _msg), do: :ok
-  defp debug_log(true, msg), do: Logger.debug(msg)
 end

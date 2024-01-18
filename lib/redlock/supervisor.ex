@@ -1,6 +1,5 @@
 defmodule Redlock.Supervisor do
   use Supervisor
-  require Logger
 
   # default Connection options
   @default_pool_size 2
@@ -81,7 +80,14 @@ defmodule Redlock.Supervisor do
   end
 
   defp prepare_global_config(opts) do
-    show_debug_logs = Keyword.get(opts, :show_debug_logs, false)
+    # "show_debug_logs" flag is deprecated in favour of "log_level"
+    # Code below is to maintain backwards compatibility with "show_debug_logs" flag
+    log_level =
+      case Keyword.get(opts, :show_debug_logs, false) do
+        false -> Keyword.get(opts, :log_level, "info")
+        _ -> "debug"
+      end
+
     drift_factor = Keyword.get(opts, :drift_factor, @default_drift_factor)
     max_retry = Keyword.get(opts, :max_retry, @default_max_retry)
 
@@ -104,7 +110,7 @@ defmodule Redlock.Supervisor do
       max_retry: max_retry,
       retry_interval_base: retry_interval_base,
       retry_interval_max: retry_interval_max,
-      show_debug_logs: show_debug_logs
+      log_level: log_level
     })
   end
 

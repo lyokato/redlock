@@ -1,6 +1,5 @@
 defmodule Redlock.NodeSupervisor do
   use Supervisor
-  require Logger
 
   @spec child_spec(Keyword.t()) :: Supervisor.child_spec()
   def child_spec(opts) do
