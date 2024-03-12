@@ -1,8 +1,11 @@
 # Change Log
 
+## [1.0.21] - 2024/03/12
+
+
 ## [1.0.20] - 2024/01/18
 
-- execute mix.format
+- Add default database - redix 1.3.0 - nimble_options 1.0 compatibility (https://github.com/lyokato/redlock/pull/47). Thanks to carrascoacd.
 
 ## [1.0.19] - 2024/01/18
 

@@ -1,7 +1,7 @@
 defmodule Redlock.Mixfile do
   use Mix.Project
 
-  @version "1.0.20"
+  @version "1.0.21"
 
   def project do
     [
