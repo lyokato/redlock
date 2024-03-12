@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.21] - 2024/03/12
+
+
+## [1.0.20] - 2024/01/18
+
+- Add default database - redix 1.3.0 - nimble_options 1.0 compatibility (https://github.com/lyokato/redlock/pull/47). Thanks to carrascoacd.
+
+## [1.0.19] - 2024/01/18
+
+### CHANGED
+
+- Allow specification of log level. https://github.com/lyokato/redlock/pull/41/files. Thanks to colin-nl.
+- Drop support for elixir 1.12 and 1.13. https://github.com/lyokato/redlock/pull/43. Thanks to warmwaffles.
+- Logger.warning instead of Logger.warn. https://github.com/lyokato/redlock/pull/45. Thanks to warmwaffles.
+- Upgrade redix to 1.3.0. https://github.com/lyokato/redlock/pull/44. Thanks to warmwaffles.
+
 ## [1.0.18] - 2023/04/05
 
 ### CHANGED

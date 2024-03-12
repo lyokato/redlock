@@ -2,7 +2,6 @@ defmodule Redlock.NodeChooser.Store.HashRing do
   alias ExHashRing.HashRing
 
   @behaviour Redlock.NodeChooser.Store
-  require Logger
 
   @impl true
   def new(pools_list) do
