@@ -5,7 +5,7 @@ defmodule Redlock.Supervisor do
   @default_pool_size 2
   @default_port 6379
   @default_ssl false
-  @default_database nil
+  @default_database 0
   @default_socket_opts []
   @default_retry_interval_base 300
   @default_retry_interval_max 3_000

@@ -1,6 +1,6 @@
 defmodule Redlock.ConnectionKeeper do
   @default_port 6379
-  @default_database nil
+  @default_database 0
   @default_ssl false
   @default_socket_opts []
   @default_reconnection_interval_base 500
